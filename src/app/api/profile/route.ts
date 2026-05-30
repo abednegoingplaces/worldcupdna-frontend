@@ -27,4 +27,15 @@ export async function POST(request: NextRequest) {
   const { id, username, favorite_team, tactical_style, rival_hate_level } = body
 
   if (!id || !username || !favorite_team) {
-    return NextResponse.jso
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ id, username, favorite_team, tactical_style, rival_hate_level })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ profile: data })
+}
