@@ -27,6 +27,16 @@ Connected to FastAPI backend at worldcupdna-backend.onrender.com
 
 ---
 
+## API Integration
+All calls go to: `https://worldcupdna-backend.onrender.com/api/v1`
+
+```typescript
+// src/lib/api.ts
+const API_BASE = 'https://worldcupdna-backend.onrender.com/api/v1'
+```
+
+---
+
 ## Pages
 
 | Page | Route | Status |
@@ -45,87 +55,73 @@ Connected to FastAPI backend at worldcupdna-backend.onrender.com
 
 ### 1. Homepage (/)
 - Fixed top navigation (glassmorphism)
-- Hero section — stadium background, trophy, countdown timer
+- Hero — stadium background, trophy, countdown to June 11
 - Player legends row — Messi, Ronaldo, Mbappe, Vinicius, Bellingham, Hakimi
 - Stats bar — 48 Teams, 104 Matches, 16 Cities, 5B+ Fans
 - Features grid — DNA Profile, Predictions, Leaderboard, Watch Parties
 - CTA banner — "Tournament kicks off June 11"
-- Bottom mobile navigation
-- Footer
+- Mobile bottom navigation
 
 ### 2. Auth (/auth)
 - Toggle Sign In / Sign Up
 - Email + password fields
 - Google OAuth button
-- Connected to POST /api/v1/auth/register
-- Connected to POST /api/v1/auth/login
-- JWT token stored in localStorage
+- POST /api/v1/auth/register
+- POST /api/v1/auth/login
+- JWT stored in localStorage
 
 ### 3. Fan Profile Builder (/profile/build)
-- Step 1: Account creation (username, email, password)
-- Step 2: Pick your nation (16 team cards with player photos)
+- Step 1: Account (username, email, password)
+- Step 2: Pick your nation (16 team cards)
 - Step 3: Tactical style + rivalry slider
-- Generates shareable DNA badge on completion
-- Connected to POST /api/v1/users/me
+- Generates shareable DNA badge
+- POST /api/v1/users/me
 
 ### 4. My Profile (/profile)
-- Display DNA badge
+- DNA badge display
 - Favorite team + tactical style
-- Total points
-- Prediction history
-- Connected to GET /api/v1/users/me
+- Total points + prediction history
+- GET /api/v1/users/me
 
 ### 5. Match Hub (/matches)
 - Featured live match hero card
-- Tab navigation — Group Stage, R16, QF, SF, Final
-- Match cards grid with scores/times
+- Tabs — Group Stage, R16, QF, SF, Final
+- Match cards with live scores
 - Group standings tables
-- Knockout bracket visualizer
-- Connected to GET /api/v1/matches
-- Connected to GET /api/v1/matches/live
+- GET /api/v1/matches/
+- GET /api/v1/matches/live
+- GET /api/v1/matches/standings
 
 ### 6. Leaderboard (/leaderboard)
 - Top 3 podium (gold, silver, bronze)
 - Global ranked list
-- Friends tab
 - My rank pinned at bottom
-- Connected to GET /api/v1/leaderboard/global
-- Connected to GET /api/v1/leaderboard/friends
+- GET /api/v1/leaderboard/
 
 ### 7. Watch Party Finder (/venues)
 - Next match countdown banner
-- Search + area filter chips
-- Venue cards with directions
-- Map view
-- Connected to GET /api/v1/venues
+- Search + filter by city/country
+- Location detection (auto-nearest venues)
+- Venue cards + "Suggest a venue" button
+- GET /api/v1/venues/
+- POST /api/v1/venues/submit
 
 ---
 
-## Components
----
-
-## API Integration
-All API calls go to:
-`https://worldcupdna-backend.onrender.com/api/v1/`
-
-```typescript
-// src/lib/api.ts
-const API_BASE = 'https://worldcupdna-backend.onrender.com/api/v1'
-```
-
+## Components Structure
 ---
 
 ## Build Order
-1. [ ] Deploy to Vercel
+1. [x] Deploy to Vercel
 2. [ ] Homepage
 3. [ ] Auth page
 4. [ ] Fan Profile Builder
 5. [ ] Match Hub
 6. [ ] Leaderboard
 7. [ ] Watch Party Finder
-8. [ ] Connect all pages to backend
+8. [ ] Connect all to backend
 9. [ ] DNA badge sharing
-10. [ ] PWA config
+10. [ ] PWA config + install prompt
 11. [ ] SEO + Open Graph
 
 ---
@@ -133,8 +129,7 @@ const API_BASE = 'https://worldcupdna-backend.onrender.com/api/v1'
 ## Timeline
 | Date | Milestone |
 |---|---|
-| June 1, 2026 | Deploy to Vercel |
-| June 3, 2026 | Homepage + Auth done |
+| June 3, 2026 | Deploy to Vercel |
 | June 5, 2026 | All pages built |
 | June 8, 2026 | Backend connected |
 | June 10, 2026 | Polish + testing |
