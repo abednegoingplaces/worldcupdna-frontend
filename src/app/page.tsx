@@ -140,28 +140,29 @@ export default function Home() {
 
       {/* NAVBAR */}
       <nav style={{position:'fixed', top:0, width:'100%', zIndex:50, display:'flex', justifyContent:'space-between', alignItems:'center', padding: isMobile ? '0 16px' : '0 48px', height:'52px', backgroundColor:'rgba(16,20,21,0.85)', backdropFilter:'blur(20px)', borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
-        <div style={{fontFamily:A, color:'#e6c364', fontSize:'20px', letterSpacing:'1px'}}>WORLDCUPDNA</div>
+        <div style={{fontFamily:A, color:'#e6c364', fontSize: isMobile ? '16px' : '20px', letterSpacing:'1px'}}>WORLDCUPDNA</div>
         <div style={{display:'flex', gap: isMobile ? '12px' : '32px', alignItems:'center'}}>
           {!isMobile && <Link href="/matches" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Matches</Link>}
           {!isMobile && <Link href="/leaderboard" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Leaderboard</Link>}
           {!isMobile && <Link href="/venues" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Watch Parties</Link>}
-          <Link href="/auth" style={{border:'1px solid #e6c364', color:'#e6c364', padding:'8px 20px', textDecoration:'none', fontSize:'14px'}}>LOGIN</Link>
+          <Link href="/auth" style={{border:'1px solid #e6c364', color:'#e6c364', padding: isMobile ? '6px 14px' : '8px 20px', textDecoration:'none', fontSize: isMobile ? '12px' : '14px'}}>LOGIN</Link>
         </div>
       </nav>
 
       {/* HERO */}
-      <section style={{position:'relative', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', paddingBottom:'40px', textAlign:'center', padding: isMobile ? '0 16px' : '0 24px', overflow:'hidden'}}>
+      <section style={{position:'relative', height: isMobile ? '100svh' : '100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', paddingBottom: isMobile ? '24px' : '40px', textAlign:'center', padding: isMobile ? '0 16px' : '0 24px', overflow:'hidden'}}>
         <div style={{position:'absolute', inset:0, zIndex:0}}>
-          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.85, objectPosition:'center top'}} src="/wc2026-banner.webp" />
-          <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 20%, rgba(16,20,21,0.2) 45%, transparent 100%)'}} />
+          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.75, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
+          <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 35%, rgba(16,20,21,0.55) 60%, rgba(16,20,21,0.2) 80%, transparent 100%)'}} />
+          <div style={{position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(16,20,21,0.5) 0%, transparent 30%)'}} />
         </div>
         <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
 
-          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(28px,8vw,40px)' : 'clamp(40px,7vw,80px)', color:'#ffffff', marginBottom:'16px', lineHeight:1, opacity:0.6}}>DISCOVER YOUR FOOTBALL DNA</h1>
-          <p style={{color:'#e6c364', fontSize: isMobile ? '14px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</p>
-          <div style={{marginBottom:'32px', padding: isMobile ? '12px 16px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
+          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#ffffff', marginBottom:'16px', lineHeight:1, opacity:0.6}}>DISCOVER YOUR FOOTBALL DNA</h1>
+          <p style={{color:'#e6c364', fontSize: isMobile ? '11px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</p>
+          <div style={{marginBottom:'32px', padding: isMobile ? '10px 14px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
             <div style={{color:'#e6c364', fontSize:'11px', letterSpacing:'4px', marginBottom:'4px'}}>TOURNAMENT COUNTDOWN</div>
-            <div style={{color:'#f5d678', fontSize: isMobile ? '13px' : '16px', letterSpacing:'3px'}}>{countdown}</div>
+            <div style={{color:'#f5d678', fontSize: isMobile ? '11px' : '16px', letterSpacing:'3px'}}>{countdown}</div>
           </div>
           <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'16px', flexWrap:'wrap', justifyContent:'center', width: isMobile ? '100%' : 'auto'}}>
             <Link href="/profile/build" style={{fontFamily:A, backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>BUILD MY DNA</Link>
@@ -175,8 +176,8 @@ export default function Home() {
         <div style={{maxWidth:'1000px', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '24px' : '32px', justItems:'center'}}>
           {[['48','TEAMS'],['104','MATCHES'],['16','CITIES'],['5B+','FANS']].map(([val, label]) => (
             <div key={label} style={{textAlign:'center'}}>
-              <div style={{fontFamily:A, fontSize: isMobile ? '32px' : '40px', color:'#e6c364'}}>{val}</div>
-              <div style={{fontSize:'12px', letterSpacing:'3px', color:'#e0e3e5', marginTop:'4px'}}>{label}</div>
+              <div style={{fontFamily:A, fontSize: isMobile ? '28px' : '40px', color:'#e6c364'}}>{val}</div>
+              <div style={{fontSize: isMobile ? '10px' : '12px', letterSpacing:'3px', color:'#e0e3e5', marginTop:'4px'}}>{label}</div>
             </div>
           ))}
         </div>
@@ -187,19 +188,19 @@ export default function Home() {
         <div style={{padding: isMobile ? '0 16px' : '0 48px', marginBottom:'40px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: isMobile ? '16px' : '0'}}>
           <div>
             <div style={{color:'#e6c364', fontSize:'11px', letterSpacing:'6px', textTransform:'uppercase'}}>Choose Your Allegiance</div>
-            <h2 style={{fontFamily:A, fontSize:'clamp(32px,5vw,56px)', color:'#fff', marginTop:'8px'}}>THE ICONS</h2>
+            <h2 style={{fontFamily:A, fontSize: isMobile ? 'clamp(28px,7vw,40px)' : 'clamp(32px,5vw,56px)', color:'#fff', marginTop:'8px'}}>THE ICONS</h2>
           </div>
           <input
             type="text"
             placeholder="SEARCH TEAMS / PLAYERS..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', fontSize: '13px', letterSpacing: '1px', outline: 'none', width: isMobile ? '100%' : '280px', boxSizing: 'border-box'}}
+            style={{backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', fontSize: isMobile ? '11px' : '13px', letterSpacing: '1px', outline: 'none', width: isMobile ? '100%' : '280px', boxSizing: 'border-box'}}
           />
         </div>
-        <div style={{display:'flex', overflowX:'auto', gap: isMobile ? '16px' : '24px', padding: isMobile ? '0 16px 32px' : '0 48px 32px', scrollbarWidth:'none'}}>
+        <div style={{display:'flex', overflowX:'auto', gap: isMobile ? '16px' : '24px', padding: isMobile ? '0 16px 32px' : '0 48px 32px', scrollbarWidth:'none', touchAction:'pan-x', WebkitOverflowScrolling:'touch'}}>
           {filteredPlayers.map((p) => (
-            <div key={p.nation} style={{position:'relative', flexShrink:0, width: isMobile ? '200px' : '280px', height: isMobile ? '320px' : '420px', borderTop:`2px solid ${p.color}`, cursor:'pointer', overflow:'hidden'}}>
+            <div key={p.nation} style={{position:'relative', flexShrink:0, width: isMobile ? '160px' : '280px', height: isMobile ? '260px' : '420px', borderTop:`2px solid ${p.color}`, cursor:'pointer', overflow:'hidden'}}>
               {playerImages[p.nation] && (
                 <img src={playerImages[p.nation]} alt={p.name} style={{position:'absolute', width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center', opacity:0.6}} />
               )}
@@ -208,9 +209,9 @@ export default function Home() {
               </div>
               <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 30%, transparent)'}} />
               <div className="group" style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'20px'}}>
-                <div style={{color:'#e6c364', fontSize:'11px', letterSpacing:'2px', marginBottom:'4px'}}>{p.nation}</div>
-                <div style={{fontFamily:'Anton, sans-serif', color:'#fff', fontSize:'18px', marginBottom:'8px'}}>{p.name}</div>
-                <button onClick={() => handlePickTeam(p.nation, p.name)} style={{width:'100%', backgroundColor:'#e6c364', color:'#000', padding:'8px', fontSize:'11px', letterSpacing:'2px', border:'none', cursor:'pointer'}}>PICK THIS TEAM</button>
+                <div style={{color:'#e6c364', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', marginBottom:'4px'}}>{p.nation}</div>
+                <div style={{fontFamily:'Anton, sans-serif', color:'#fff', fontSize: isMobile ? '15px' : '18px', marginBottom:'8px'}}>{p.name}</div>
+                <button onClick={() => handlePickTeam(p.nation, p.name)} style={{width:'100%', backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '6px' : '8px', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', border:'none', cursor:'pointer'}}>PICK THIS TEAM</button>
               </div>
             </div>
           ))}
@@ -226,13 +227,13 @@ export default function Home() {
           </div>
           <div style={{display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap:'24px'}}>
             {FEATURES.map(f => (
-              <Link href={f.link} key={f.title} style={{display:'flex', gap:'24px', alignItems:'flex-start', padding:'32px', backgroundColor:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', textDecoration:'none'}}>
-                <div style={{backgroundColor:'rgba(230,195,100,0.1)', padding:'16px', border:'1px solid rgba(230,195,100,0.2)', flexShrink:0}}>
+              <Link href={f.link} key={f.title} style={{display:'flex', gap:'24px', alignItems:'flex-start', padding: isMobile ? '20px' : '32px', backgroundColor:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', textDecoration:'none'}}>
+                <div style={{backgroundColor:'rgba(230,195,100,0.1)', padding: isMobile ? '12px' : '16px', border:'1px solid rgba(230,195,100,0.2)', flexShrink:0}}>
                   <span className="material-symbols-outlined" style={{color:'#e6c364', fontSize:'32px'}}>{f.icon}</span>
                 </div>
                 <div>
-                  <h3 style={{fontFamily:A, color:'#fff', fontSize:'20px', marginBottom:'8px'}}>{f.title}</h3>
-                  <p style={{color:'#c6c6cc', fontSize:'14px', lineHeight:1.6}}>{f.desc}</p>
+                  <h3 style={{fontFamily:A, color:'#fff', fontSize: isMobile ? '16px' : '20px', marginBottom:'8px'}}>{f.title}</h3>
+                  <p style={{color:'#c6c6cc', fontSize: isMobile ? '13px' : '14px', lineHeight:1.6}}>{f.desc}</p>
                 </div>
               </Link>
             ))}
@@ -242,10 +243,10 @@ export default function Home() {
 
       {/* CTA BANNER */}
       <section style={{padding: isMobile ? '32px 16px' : '80px 48px'}}>
-        <div style={{maxWidth:'1000px', margin:'0 auto', background:'linear-gradient(to right, #93000a, #080d1a)', padding: isMobile ? '32px' : '80px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexWrap:'wrap', gap:'32px'}}>
+        <div style={{maxWidth:'1000px', margin:'0 auto', background:'linear-gradient(to right, #93000a, #080d1a)', padding: isMobile ? '24px 20px' : '80px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexWrap:'wrap', gap:'32px'}}>
           <div>
             <div style={{display:'inline-block', backgroundColor:'#fff', color:'#000', fontSize:'11px', padding:'4px 12px', marginBottom:'16px', letterSpacing:'2px'}}>LIVE ACCESS</div>
-            <h2 style={{fontFamily:A, fontSize:'clamp(28px,4vw,48px)', color:'#fff', marginBottom:'12px'}}>TOURNAMENT KICKS OFF JUNE 11</h2>
+            <h2 style={{fontFamily:A, fontSize: isMobile ? 'clamp(22px,6vw,36px)' : 'clamp(28px,4vw,48px)', color:'#fff', marginBottom:'12px'}}>TOURNAMENT KICKS OFF JUNE 11</h2>
             <p style={{color:'rgba(224,227,229,0.8)', fontSize: isMobile ? '15px' : '18px'}}>Don't just watch history. Be part of it.</p>
           </div>
           <Link href="/profile/build" style={{fontFamily:A, backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '16px 24px' : '20px 40px', fontSize: isMobile ? '16px' : '20px', textDecoration:'none', whiteSpace:'nowrap', textAlign:'center', width: isMobile ? '100%' : 'auto', boxSizing:'border-box'}}>BUILD YOUR PROFILE NOW</Link>
@@ -255,10 +256,10 @@ export default function Home() {
       {/* FOOTER */}
       <footer style={{backgroundColor:'#323537', borderTop:'1px solid rgba(255,255,255,0.1)', padding: isMobile ? '32px 16px' : '48px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'center' : 'center', textAlign: isMobile ? 'center' : 'left', flexWrap:'wrap', gap:'24px'}}>
         <div>
-          <div style={{fontFamily:A, color:'#e6c364', fontSize:'20px', marginBottom:'8px'}}>WORLDCUPDNA</div>
+          <div style={{fontFamily:A, color:'#e6c364', fontSize: isMobile ? '16px' : '20px', marginBottom:'8px'}}>WORLDCUPDNA</div>
           <p style={{color:'#c6c6cc', fontSize:'14px'}}>The ultimate fan platform for FIFA World Cup 2026.</p>
         </div>
-        <div style={{color:'#909096', fontSize:'12px'}}>© 2026 WORLDCUPDNA. ALL RIGHTS RESERVED.</div>
+        <div style={{color:'#909096', fontSize: isMobile ? '11px' : '12px'}}>© 2026 WORLDCUPDNA. ALL RIGHTS RESERVED.</div>
       </footer>
 
     </main>
