@@ -173,7 +173,7 @@ export default function Home() {
 
       {/* STATS BAR */}
       <section style={{backgroundColor:'#191c1e', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)', padding: isMobile ? '24px 16px' : '32px 48px'}}>
-        <div style={{maxWidth:'1000px', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '24px' : '32px', justItems:'center'}}>
+        <div style={{maxWidth:'1000px', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '24px' : '32px', justifyItems:'center'}}>
           {[['48','TEAMS'],['104','MATCHES'],['16','CITIES'],['5B+','FANS']].map(([val, label]) => (
             <div key={label} style={{textAlign:'center'}}>
               <div style={{fontFamily:A, fontSize: isMobile ? '28px' : '40px', color:'#e6c364'}}>{val}</div>
