@@ -156,8 +156,8 @@ export default function Home() {
         </div>
         <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
 
-          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#ffffff', marginBottom:'16px', lineHeight:1, textShadow:'2px 2px 20px rgba(0,0,0,0.9)'}}>DISCOVER YOUR FOOTBALL DNA</h1>
-          <p style={{color:'#f5d678', fontSize: isMobile ? '11px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</p>
+          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#e6c364', marginBottom:'16px', lineHeight:1, textShadow:'2px 2px 20px rgba(0,0,0,0.9)'}}>DISCOVER YOUR FOOTBALL DNA</h1>
+          <p style={{color:'#f5d678', fontSize: isMobile ? '11px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}><strong style={{fontWeight:900, letterSpacing:'3px'}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</strong></p>
           <div style={{marginBottom:'32px', padding: isMobile ? '10px 14px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
             <div style={{color:'#f5d678', fontSize:'11px', letterSpacing:'4px', marginBottom:'4px'}}>TOURNAMENT COUNTDOWN</div>
             <div style={{color:'#f5d678', fontSize: isMobile ? '11px' : '16px', letterSpacing:'3px'}}>{countdown}</div>
