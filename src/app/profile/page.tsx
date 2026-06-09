@@ -67,11 +67,7 @@ export default function ProfilePage() {
           return
         }
 
-        const res = await fetch(`https://api.football-data.org/v4/teams/${teamId}`, {
-          headers: {
-            'X-Auth-Token': process.env.NEXT_PUBLIC_FOOTBALL_DATA_API_KEY || ''
-          }
-        })
+        const res = await fetch(`/api/squad?teamId=${teamId}`)
 
         if (!res.ok) {
           throw new Error('Failed to fetch squad data. Check API key or rate limits.')

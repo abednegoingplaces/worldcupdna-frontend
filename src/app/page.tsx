@@ -152,9 +152,7 @@ export default function Home() {
       {/* HERO */}
       <section style={{position:'relative', height: isMobile ? '100svh' : '100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', paddingBottom: isMobile ? '24px' : '40px', textAlign:'center', padding: isMobile ? '0 16px' : '0 24px', overflow:'hidden'}}>
         <div style={{position:'absolute', inset:0, zIndex:0}}>
-          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.75, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
-          <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 35%, rgba(16,20,21,0.55) 60%, rgba(16,20,21,0.2) 80%, transparent 100%)'}} />
-          <div style={{position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(16,20,21,0.5) 0%, transparent 30%)'}} />
+          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:1.0, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
         </div>
         <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
 
