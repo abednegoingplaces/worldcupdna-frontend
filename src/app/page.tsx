@@ -205,7 +205,7 @@ export default function Home() {
               <div style={{position:'absolute', inset:0, background:`linear-gradient(to bottom, ${p.color}99, #080d1a)`, display:'flex', alignItems:'center', justifyContent:'center'}}>
                 <div style={{fontFamily:'Anton, sans-serif', fontSize:'70px', color:p.color, opacity:0.4, letterSpacing:'-4px'}}>{p.nation.slice(0,3)}</div>
               </div>
-              <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 30%, transparent)'}} />
+              <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 60%, rgba(16,20,21,0.98) 75%, rgba(16,20,21,0.7) 90%, transparent 100%)'}} />
               <div className="group" style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'20px'}}>
                 <div style={{color:'#f5d678', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', marginBottom:'4px'}}>{p.nation}</div>
                 <div style={{fontFamily:'Anton, sans-serif', color:'#fff', fontSize: isMobile ? '15px' : '18px', marginBottom:'8px'}}>{p.name}</div>
