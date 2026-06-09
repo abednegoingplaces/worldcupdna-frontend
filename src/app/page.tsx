@@ -152,19 +152,19 @@ export default function Home() {
       {/* HERO */}
       <section style={{position:'relative', height: isMobile ? '100svh' : '100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', paddingBottom: isMobile ? '24px' : '40px', textAlign:'center', padding: isMobile ? '0 16px' : '0 24px', overflow:'hidden'}}>
         <div style={{position:'absolute', inset:0, zIndex:0}}>
-          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:1.0, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
+          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.3, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
         </div>
         <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
 
           <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#e6c364', marginBottom:'16px', lineHeight:1, textShadow:'2px 2px 20px rgba(0,0,0,0.9)'}}>DISCOVER YOUR FOOTBALL DNA</h1>
-          <p style={{color:'#f5d678', fontSize: isMobile ? '11px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}><strong style={{fontWeight:900, letterSpacing:'3px'}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</strong></p>
+          <p style={{color:'#C1440E', fontSize: isMobile ? '13px' : '22px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:1, fontWeight:900}}><strong style={{fontWeight:900, letterSpacing:'3px'}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</strong></p>
           <div style={{marginBottom:'32px', padding: isMobile ? '10px 14px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
-            <div style={{color:'#f5d678', fontSize:'11px', letterSpacing:'4px', marginBottom:'4px'}}>TOURNAMENT COUNTDOWN</div>
-            <div style={{color:'#f5d678', fontSize: isMobile ? '11px' : '16px', letterSpacing:'3px'}}>{countdown}</div>
+            <div style={{color:'#e6c364', fontSize:'13px', letterSpacing:'4px', marginBottom:'4px', fontWeight:900}}>TOURNAMENT COUNTDOWN</div>
+            <div style={{color:'#ffffff', fontSize: isMobile ? '13px' : '20px', letterSpacing:'3px', fontWeight:900}}>{countdown}</div>
           </div>
           <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'16px', flexWrap:'wrap', justifyContent:'center', width: isMobile ? '100%' : 'auto'}}>
             <Link href="/profile/build" style={{fontFamily:A, backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>BUILD MY DNA</Link>
-            <Link href="/matches" style={{fontFamily:A, border:'1px solid #fff', color:'#fff', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>VIEW MATCHES</Link>
+            <Link href="/matches" style={{fontFamily:A, border:'2px solid #1a6fe8', color:'#1a6fe8', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>VIEW MATCHES</Link>
           </div>
         </div>
       </section>
@@ -205,7 +205,7 @@ export default function Home() {
               <div style={{position:'absolute', inset:0, background:`linear-gradient(to bottom, ${p.color}99, #080d1a)`, display:'flex', alignItems:'center', justifyContent:'center'}}>
                 <div style={{fontFamily:'Anton, sans-serif', fontSize:'70px', color:p.color, opacity:0.4, letterSpacing:'-4px'}}>{p.nation.slice(0,3)}</div>
               </div>
-              <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 60%, rgba(16,20,21,0.98) 75%, rgba(16,20,21,0.7) 90%, transparent 100%)'}} />
+              <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 75%, rgba(16,20,21,1) 85%, rgba(16,20,21,0.95) 92%, transparent 100%)'}} />
               <div className="group" style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'20px'}}>
                 <div style={{color:'#f5d678', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', marginBottom:'4px'}}>{p.nation}</div>
                 <div style={{fontFamily:'Anton, sans-serif', color:'#fff', fontSize: isMobile ? '15px' : '18px', marginBottom:'8px'}}>{p.name}</div>
