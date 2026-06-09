@@ -156,7 +156,7 @@ export default function Home() {
         </div>
         <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
 
-          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#ffffff', marginBottom:'16px', lineHeight:1, opacity:0.6}}>DISCOVER YOUR FOOTBALL DNA</h1>
+          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#ffffff', marginBottom:'16px', lineHeight:1, opacity:1}}>DISCOVER YOUR FOOTBALL DNA</h1>
           <p style={{color:'#e6c364', fontSize: isMobile ? '11px' : '18px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:0.55}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</p>
           <div style={{marginBottom:'32px', padding: isMobile ? '10px 14px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
             <div style={{color:'#e6c364', fontSize:'11px', letterSpacing:'4px', marginBottom:'4px'}}>TOURNAMENT COUNTDOWN</div>
@@ -200,7 +200,7 @@ export default function Home() {
           {filteredPlayers.map((p) => (
             <div key={p.nation} style={{position:'relative', flexShrink:0, width: isMobile ? '160px' : '280px', height: isMobile ? '260px' : '420px', borderTop:`2px solid ${p.color}`, cursor:'pointer', overflow:'hidden'}}>
               {playerImages[p.nation] && (
-                <img src={playerImages[p.nation]} alt={p.name} style={{position:'absolute', width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center', opacity:0.6}} />
+                <img src={playerImages[p.nation]} alt={p.name} style={{position:'absolute', width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center', opacity:1}} />
               )}
               <div style={{position:'absolute', inset:0, background:`linear-gradient(to bottom, ${p.color}99, #080d1a)`, display:'flex', alignItems:'center', justifyContent:'center'}}>
                 <div style={{fontFamily:'Anton, sans-serif', fontSize:'70px', color:p.color, opacity:0.4, letterSpacing:'-4px'}}>{p.nation.slice(0,3)}</div>

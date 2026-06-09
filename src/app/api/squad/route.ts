@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(`https://api.football-data.org/v4/teams/${teamId}`, {
+    const res = await fetch(`https://api.football-data.org/v4/teams/${teamId}/matches?status=SCHEDULED&limit=5`, {
       headers: { 'X-Auth-Token': apiKey },
       next: { revalidate: 3600 } // cache for 1 hour
     })

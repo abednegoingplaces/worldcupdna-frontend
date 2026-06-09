@@ -24,18 +24,20 @@ const NATION_TO_TEAM_ID: Record<string, number> = {
   'MEXICO': 16,
 }
 
-interface Player {
+interface Match {
   id: number
-  name: string
-  position: string
-  nationality: string
+  homeTeam: { name: string }
+  awayTeam: { name: string }
+  utcDate: string
+  competition: { name: string }
+  status: string
 }
 
 export default function ProfilePage() {
   const router = useRouter()
   const [nation, setNation] = useState<string | null>(null)
   const [starPlayer, setStarPlayer] = useState<string | null>(null)
-  const [squad, setSquad] = useState<Player[]>([])
+  const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,11 +60,11 @@ export default function ProfilePage() {
     setNation(savedNation)
     setStarPlayer(savedPlayer)
 
-    const fetchSquad = async () => {
+    const fetchMatches = async () => {
       try {
         const teamId = NATION_TO_TEAM_ID[savedNation.toUpperCase()]
         if (!teamId) {
-          setError(`No live squad data available for ${savedNation} at this moment.`)
+          setError(`No upcoming match data available for ${savedNation} at this moment.`)
           setLoading(false)
           return
         }
@@ -70,11 +72,11 @@ export default function ProfilePage() {
         const res = await fetch(`/api/squad?teamId=${teamId}`)
 
         if (!res.ok) {
-          throw new Error('Failed to fetch squad data. Check API key or rate limits.')
+          throw new Error('Failed to fetch match data. Check API key or rate limits.')
         }
 
         const data = await res.json()
-        setSquad(data.squad || [])
+        setMatches(data.matches || [])
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -82,7 +84,7 @@ export default function ProfilePage() {
       }
     }
 
-    fetchSquad()
+    fetchMatches()
   }, [router])
 
   const handleChangeTeam = () => {
@@ -94,7 +96,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main style={{ minHeight: '100vh', backgroundColor: '#101415', color: '#e0e3e5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ fontFamily: A, fontSize: '32px', color: '#e6c364' }}>LOADING SQUAD...</div>
+        <div style={{ fontFamily: A, fontSize: '32px', color: '#e6c364' }}>LOADING MATCHES...</div>
       </main>
     )
   }
@@ -116,22 +118,30 @@ export default function ProfilePage() {
         <p style={{ color: '#c6c6cc', fontSize: '18px', letterSpacing: '2px' }}>STAR PLAYER: <span style={{ color: '#fff' }}>{starPlayer}</span></p>
       </section>
 
-      {/* SQUAD GRID */}
+      {/* UPCOMING MATCHES */}
       <section style={{ padding: '40px 48px', maxWidth: '1200px', margin: '0 auto' }}>
-        <h2 style={{ fontFamily: A, fontSize: '32px', color: '#fff', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px' }}>LIVE SQUAD</h2>
+        <h2 style={{ fontFamily: A, fontSize: '32px', color: '#fff', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px' }}>UPCOMING MATCHES</h2>
         
         {error ? (
           <div style={{ color: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.1)', padding: '24px', border: '1px solid rgba(255,107,107,0.2)', textAlign: 'center' }}>
             {error}
           </div>
+        ) : matches.length === 0 ? (
+          <div style={{ color: '#909096', textAlign: 'center', padding: '40px' }}>No upcoming matches scheduled.</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-            {squad.map((player) => (
-              <div key={player.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {matches.map((match) => (
+              <div key={match.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#e6c364' }}></div>
-                <div style={{ color: '#e6c364', fontSize: '11px', letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>{player.position || 'Unknown Position'}</div>
-                <div style={{ fontFamily: A, fontSize: '24px', color: '#fff', marginBottom: '8px' }}>{player.name}</div>
-                <div style={{ color: '#888', fontSize: '13px' }}>{player.nationality}</div>
+                <div style={{ color: '#e6c364', fontSize: '11px', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>{match.competition?.name || 'Competition'}</div>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '24px', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: A, fontSize: '24px', color: '#fff', flex: 1, textAlign: 'right' }}>{match.homeTeam?.name || 'TBD'}</div>
+                  <div style={{ color: '#e6c364', fontSize: '14px', fontWeight: 'bold', letterSpacing: '2px' }}>VS</div>
+                  <div style={{ fontFamily: A, fontSize: '24px', color: '#fff', flex: 1, textAlign: 'left' }}>{match.awayTeam?.name || 'TBD'}</div>
+                </div>
+                <div style={{ color: '#909096', fontSize: '13px', textAlign: 'center' }}>
+                  {match.utcDate ? new Date(match.utcDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Date TBD'}
+                </div>
               </div>
             ))}
           </div>
