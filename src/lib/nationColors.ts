@@ -26,3 +26,27 @@ export function nationGradient(name: string): string {
 export function nationColor(name: string): string {
   return NATION_COLORS[name.toUpperCase().trim()] || '#2a2a2a'
 }
+
+/** ISO 3166-1 alpha-2 codes used to render real flag emoji. Keyed by both the
+ *  full nation name and the football-data 3-letter code where handy. */
+export const NATION_ISO: Record<string, string> = {
+  MEXICO: 'MX', PANAMA: 'PA', HAITI: 'HT', 'CURAÇAO': 'CW', CANADA: 'CA', USA: 'US',
+  JAPAN: 'JP', IRAN: 'IR', 'SOUTH KOREA': 'KR', AUSTRALIA: 'AU', QATAR: 'QA',
+  'SAUDI ARABIA': 'SA', IRAQ: 'IQ', UZBEKISTAN: 'UZ', JORDAN: 'JO', MOROCCO: 'MA',
+  SENEGAL: 'SN', EGYPT: 'EG', TUNISIA: 'TN', ALGERIA: 'DZ', 'SOUTH AFRICA': 'ZA',
+  'IVORY COAST': 'CI', GHANA: 'GH', 'DR CONGO': 'CD', 'CAPE VERDE': 'CV',
+  ARGENTINA: 'AR', BRAZIL: 'BR', COLOMBIA: 'CO', ECUADOR: 'EC', URUGUAY: 'UY',
+  PARAGUAY: 'PY', 'NEW ZEALAND': 'NZ', FRANCE: 'FR', SPAIN: 'ES', ENGLAND: 'GB',
+  PORTUGAL: 'PT', GERMANY: 'DE', NETHERLANDS: 'NL', BELGIUM: 'BE', CROATIA: 'HR',
+  SWITZERLAND: 'CH', AUSTRIA: 'AT', SCOTLAND: 'GB', NORWAY: 'NO', SWEDEN: 'SE',
+  TURKEY: 'TR', CZECHIA: 'CZ', 'BOSNIA AND HERZEGOVINA': 'BA', ITALY: 'IT', IRELAND: 'IE',
+}
+
+/** Returns a flag emoji for a nation name (e.g. "Brazil" → 🇧🇷), or '' if unknown. */
+export function nationFlag(name: string): string {
+  const iso = NATION_ISO[name.toUpperCase().trim()]
+  if (!iso) return ''
+  return iso
+    .toUpperCase()
+    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+}

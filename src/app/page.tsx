@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { SiteHeader, MobileNav } from '@/components/layout/SiteShell'
 import { TeamCrest } from '@/components/ui'
-import { nationGradient } from '@/lib/nationColors'
+import { nationGradient, nationFlag } from '@/lib/nationColors'
 import { api } from '@/lib/api'
 import { matchTime } from '@/lib/format'
 import type { Match } from '@/types'
@@ -58,13 +58,13 @@ export default function Home() {
           {/* Background layers */}
           <div className="absolute inset-0 z-0">
             <img alt="World Cup Stadium Energy" className="w-full h-full object-cover" src="/images/heroes/hero-stadium.jpg" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-transparent h-[200px]" />
+            <div className="absolute inset-0 bg-background/55" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-background" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(10,10,10,0.65)_100%)]" />
           </div>
 
           <div className="relative z-10 w-full max-w-container-max mx-auto px-gutter py-xl">
-            <div className="max-w-2xl space-y-lg animate-fade-in-up">
+            <div className="max-w-2xl mx-auto text-center flex flex-col items-center space-y-lg animate-fade-in-up">
               {/* Status badge */}
               <div className="inline-flex items-center gap-sm bg-secondary-container/8 border border-secondary-container/20 px-md py-xs rounded-full">
                 <span className="relative flex h-2 w-2">
@@ -192,10 +192,13 @@ export default function Home() {
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   <div
-                    className="h-24 w-full relative"
+                    className="h-24 w-full relative flex items-center justify-center"
                     style={{ background: nationGradient(player.nation) }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    <span className="text-[40px] leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] select-none">
+                      {nationFlag(player.nation)}
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
                   <div className="p-sm space-y-xs">
                     <p className="font-headline-md text-[13px] font-black uppercase tracking-tight text-on-background truncate">

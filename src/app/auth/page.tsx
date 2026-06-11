@@ -14,6 +14,7 @@ function AuthCard() {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [note, setNote] = useState<string | null>(null)
 
   // login fields
   const [loginEmail, setLoginEmail] = useState('')
@@ -29,6 +30,7 @@ function AuthCard() {
   function switchTab(tab: 'login' | 'signup') {
     setActiveTab(tab)
     setError(null)
+    setNote(null)
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -166,9 +168,18 @@ function AuthCard() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block font-label-caps text-[11px] text-on-surface-variant uppercase ml-1 tracking-wider">
-                  Password
-                </label>
+                <div className="flex items-center justify-between ml-1">
+                  <label className="block font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setNote('Password reset is coming soon — contact support if you are locked out.')}
+                    className="font-label-caps text-[11px] text-primary-container uppercase tracking-wider hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 group-focus-within:text-primary-container transition-colors text-[20px]">
                     lock
@@ -309,6 +320,43 @@ function AuthCard() {
                 </button>
               </p>
             </form>
+          )}
+
+          {/* Social sign-in */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="h-px flex-1 bg-outline-variant/20" />
+            <span className="font-label-caps text-[10px] text-on-surface-variant/60 uppercase tracking-wider">
+              Or continue with
+            </span>
+            <div className="h-px flex-1 bg-outline-variant/20" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setNote('Google sign-in is coming soon — use email for now.')}
+              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-lowest/60 border border-outline-variant/30 hover:border-primary-container/40 hover:bg-white/[0.03] transition-all font-headline-md text-[14px] font-bold text-on-surface"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+                <path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.2 35 26.7 36 24 36c-5.3 0-9.7-3.1-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.3C41.4 36.2 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z"/>
+              </svg>
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={() => setNote('Apple sign-in is coming soon — use email for now.')}
+              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-lowest/60 border border-outline-variant/30 hover:border-primary-container/40 hover:bg-white/[0.03] transition-all font-headline-md text-[14px] font-bold text-on-surface"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden>
+                <path d="M16.365 1.43c0 1.14-.42 2.2-1.13 3.02-.86.99-2.27 1.76-3.42 1.67-.14-1.12.42-2.3 1.07-3.03.74-.85 2.05-1.5 3.13-1.55.05.31.05.62.05.92h.23zm3.3 16.2c-.6 1.38-.89 1.99-1.66 3.21-1.08 1.7-2.6 3.81-4.49 3.83-1.68.02-2.11-1.09-4.39-1.08-2.28.01-2.76 1.1-4.44 1.08-1.89-.02-3.33-1.93-4.41-3.62C-1.6 17.27-1.9 11.4.85 8.34c1.36-1.55 3.5-2.53 5.45-2.53 1.99 0 3.24 1.09 4.88 1.09 1.59 0 2.56-1.09 4.86-1.09 1.74 0 3.58.95 4.9 2.59-4.31 2.36-3.6 8.51.73 9.23z"/>
+              </svg>
+              Apple
+            </button>
+          </div>
+          {note && (
+            <p className="mt-4 text-center font-body-md text-[13px] text-on-surface-variant">{note}</p>
           )}
         </div>
       </div>

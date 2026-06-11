@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { nationGradient } from '@/lib/nationColors'
+import { nationGradient, nationColor } from '@/lib/nationColors'
 import { useAuth } from '@/lib/auth'
 import { api, ApiError } from '@/lib/api'
 
@@ -66,12 +66,13 @@ const TACTICS = [
 
 export default function BuildProfilePage() {
   const router = useRouter()
-  const { isAuthenticated, loading: authLoading, register, setUser } = useAuth()
+  const { user, isAuthenticated, loading: authLoading, register, setUser } = useAuth()
 
   // Authenticated users skip the account step (they already have one).
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [dnaCode, setDnaCode] = useState('')
 
   const [formData, setFormData] = useState({
     username: '',
@@ -112,7 +113,9 @@ export default function BuildProfilePage() {
           rivalry_level: formData.rivalry_level,
         })
       }
-      router.push('/profile')
+      // Reveal the generated DNA badge before sending them to their profile.
+      setDnaCode(`WC-DNA-${Math.floor(1000 + Math.random() * 9000)}-${formData.favorite_team.slice(0, 1).toUpperCase() || 'X'}`)
+      setStep(4)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
     } finally {
@@ -120,9 +123,22 @@ export default function BuildProfilePage() {
     }
   }
 
+  function shareBadge() {
+    const text = `My Football DNA: ${formData.favorite_team} supporter · ${formData.tactical_style} · ${dnaCode} — built on WorldCupDNA`
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: 'My Football DNA', text }).catch(() => {})
+    } else if (typeof navigator !== 'undefined') {
+      navigator.clipboard?.writeText(text)
+      setError('Copied your DNA to the clipboard!')
+    }
+  }
+
+  const isBadge = step === 4
+  const displayName = formData.username || user?.username || 'Fan'
+
   // progress is relative to the steps that actually apply
   const shownStep = accountStep ? step : step - 1
-  const progress = (shownStep / totalSteps) * 100
+  const progress = isBadge ? 100 : Math.min(100, (shownStep / totalSteps) * 100)
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-20 md:pb-0 font-inter flex flex-col">
@@ -150,7 +166,7 @@ export default function BuildProfilePage() {
           />
         </div>
         <p className="text-center py-3 font-label-caps text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">
-          Step {shownStep} of {totalSteps}
+          {isBadge ? 'Sequence Complete · 100%' : `Step ${shownStep} of ${totalSteps}`}
         </p>
 
         <div className="flex-1 flex flex-col items-center px-gutter py-8 md:py-12 relative justify-center">
@@ -342,6 +358,70 @@ export default function BuildProfilePage() {
               >
                 Back
               </button>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="w-full max-w-md z-10 text-center space-y-lg animate-fade-in-up">
+              <div className="space-y-xs">
+                <h1 className="font-display-md text-display-md font-black uppercase tracking-tight text-white">
+                  Your Football <span className="text-primary-container">DNA Badge</span>
+                </h1>
+                <p className="text-on-surface-variant font-body-md">
+                  Your identity has been sequenced. Welcome to the elite.
+                </p>
+              </div>
+
+              {/* Badge card */}
+              <div className="relative rounded-3xl border border-primary-container/30 bg-gradient-to-b from-surface-container/80 to-surface-container-lowest/90 p-lg overflow-hidden shadow-[0_0_40px_rgba(233,196,0,0.15)]">
+                <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_top,#e9c400,transparent_60%)] pointer-events-none" />
+                <div className="relative space-y-md">
+                  <div
+                    className="w-20 h-20 mx-auto rounded-full border-2 flex items-center justify-center font-black text-2xl text-white uppercase"
+                    style={{ background: nationGradient(formData.favorite_team), borderColor: nationColor(formData.favorite_team) }}
+                  >
+                    {displayName.slice(0, 2)}
+                  </div>
+                  <div>
+                    <p className="font-display-md text-headline-lg font-black text-white">{displayName}</p>
+                    <p className="font-label-caps text-[11px] text-primary-container uppercase tracking-wider mt-1">
+                      {formData.favorite_team} Supporter
+                    </p>
+                  </div>
+                  <div className="flex justify-center items-stretch gap-lg pt-sm">
+                    <div className="space-y-1">
+                      <p className="font-label-caps text-[9px] text-on-surface-variant uppercase tracking-wider">Tactical Style</p>
+                      <p className="font-montserrat text-sm font-bold text-white">{formData.tactical_style || '—'}</p>
+                    </div>
+                    <div className="w-px bg-outline-variant/30" />
+                    <div className="space-y-1">
+                      <p className="font-label-caps text-[9px] text-on-surface-variant uppercase tracking-wider">Rivalry Level</p>
+                      <p className="font-montserrat text-sm font-bold text-white">{Math.max(1, Math.round(formData.rivalry_level / 10))} / 10</p>
+                    </div>
+                  </div>
+                  <div className="pt-sm border-t border-outline-variant/20">
+                    <p className="font-label-caps text-[10px] tracking-[0.25em] text-on-surface-variant/70">{dnaCode}</p>
+                  </div>
+                </div>
+              </div>
+
+              {error && <p className="text-secondary-fixed text-center text-sm font-label-caps">{error}</p>}
+
+              <div className="flex gap-md">
+                <button
+                  onClick={shareBadge}
+                  className="flex-1 glass-card py-4 rounded-xl font-montserrat uppercase tracking-wider text-sm font-bold text-white flex items-center justify-center gap-2 hover:bg-white/[0.05] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">share</span>
+                  Share
+                </button>
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="flex-1 btn-primary py-4 rounded-xl font-montserrat uppercase tracking-wider text-sm font-black active:scale-[0.98]"
+                >
+                  View Profile
+                </button>
+              </div>
             </div>
           )}
         </div>
