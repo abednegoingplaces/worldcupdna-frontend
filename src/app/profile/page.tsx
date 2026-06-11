@@ -1,261 +1,215 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { SiteShell } from '@/components/layout/SiteShell'
+import { TeamCrest } from '@/components/ui'
+import { api } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
+import { nationGradient } from '@/lib/nationColors'
+import { matchDay, matchTime } from '@/lib/format'
+import type { Match } from '@/types'
 
-// Hardcoded mapping of NATION to football-data.org Team ID
-// These IDs correspond to teams in the API. 
-const NATION_TO_TEAM_ID: Record<string, number> = {
-  'ARGENTINA': 107,
-  'BRAZIL': 63,
-  'FRANCE': 77,
-  'ENGLAND': 66,
-  'SPAIN': 79,
-  'GERMANY': 759,
-  'PORTUGAL': 764,
-  'NETHERLANDS': 8600,
-  'ITALY': 82, // Not in the 48 list but good to have
-  'URUGUAY': 758,
-  'CROATIA': 794,
-  'BELGIUM': 805,
-  'USA': 10, // Example IDs, might need adjustment based on exact API
-  'MEXICO': 16,
-}
-
-interface Match {
-  id: number
-  homeTeam: { name: string }
-  awayTeam: { name: string }
-  utcDate: string
-  competition: { name: string }
-  status: string
+function teamMatches(matches: Match[], team: string): Match[] {
+  const t = team.trim().toLowerCase()
+  return matches.filter(
+    (m) => m.home_team.toLowerCase() === t || m.away_team.toLowerCase() === t
+  )
 }
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [nation, setNation] = useState<string | null>(null)
-  const [starPlayer, setStarPlayer] = useState<string | null>(null)
-  const [matches, setMatches] = useState<Match[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [username, setUsername] = useState<string>('FAN')
+  const { user, loading: authLoading, isAuthenticated, logout } = useAuth()
+
+  const [rank, setRank] = useState<number | null>(null)
+  const [fixtures, setFixtures] = useState<Match[]>([])
+  const [loadingMatches, setLoadingMatches] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/auth?redirect=/profile')
-      return
-    }
+    if (!authLoading && !isAuthenticated) router.push('/auth?next=/profile')
+  }, [authLoading, isAuthenticated, router])
 
-    const savedNation = localStorage.getItem('selectedNation')
-    const savedPlayer = localStorage.getItem('selectedPlayer')
-    const savedUsername = localStorage.getItem('username')
-
-    if (!savedNation || !savedPlayer) {
-      // If no team picked, redirect back to home
-      router.push('/')
-      return
-    }
-
-    setNation(savedNation)
-    setStarPlayer(savedPlayer)
-    if (savedUsername) {
-      setUsername(savedUsername)
-    }
-
-    const fetchMatches = async () => {
-      try {
-        const teamId = NATION_TO_TEAM_ID[savedNation.toUpperCase()]
-        if (!teamId) {
-          setError(`No upcoming match data available for ${savedNation} at this moment.`)
-          setLoading(false)
-          return
-        }
-
-        const res = await fetch(`/api/squad?teamId=${teamId}`)
-
-        if (!res.ok) {
-          throw new Error('Failed to fetch match data. Check API key or rate limits.')
-        }
-
-        const data = await res.json()
-        setMatches(data.matches || [])
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+  const loadExtras = useCallback(async () => {
+    setLoadingMatches(true)
+    try {
+      const [board, upcoming] = await Promise.all([api.leaderboard(100), api.matches()])
+      setRank(board.me?.rank ?? null)
+      if (user?.favorite_team) {
+        setFixtures(teamMatches(upcoming.matches, user.favorite_team).slice(0, 8))
+      } else {
+        setFixtures([])
       }
+    } catch {
+      // non-fatal — profile still renders
+    } finally {
+      setLoadingMatches(false)
     }
+  }, [user?.favorite_team])
 
-    fetchMatches()
-  }, [router])
+  useEffect(() => {
+    if (isAuthenticated) loadExtras()
+  }, [isAuthenticated, loadExtras])
 
-  const handleChangeTeam = () => {
-    localStorage.removeItem('selectedNation')
-    localStorage.removeItem('selectedPlayer')
-    router.push('/')
-  }
-
-  if (loading) {
+  if (authLoading || !user) {
     return (
-      <main className="min-h-screen bg-background text-on-background flex justify-center items-center font-inter">
-        <div className="flex flex-col items-center gap-md">
-          <span className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></span>
-          <div className="font-display-md text-headline-md text-primary-container font-black tracking-widest uppercase mt-4">LOADING MATCHES...</div>
+      <SiteShell>
+        <div className="flex justify-center items-center py-xl">
+          <span className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin" />
         </div>
-      </main>
+      </SiteShell>
     )
   }
 
+  const team = user.favorite_team || ''
+
   return (
-    <div className="flex flex-col min-h-screen pb-16 md:pb-0 bg-background text-on-background font-inter">
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
-        <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
-          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
-            WorldCupDNA
-          </Link>
-          <nav className="hidden md:flex items-center space-x-lg">
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/">
-              Home
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/matches">
-              Matches
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/predictions">
-              Predictions
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/leaderboard">
-              Leaderboard
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/venues">
-              Watch Parties
-            </Link>
-          </nav>
-          <div className="flex items-center gap-md">
-            <div className="flex items-center gap-sm">
-              <span className="hidden sm:inline font-label-caps text-xs text-on-surface-variant uppercase tracking-wider">
-                👋 {username}
-              </span>
-              <button 
-                onClick={handleChangeTeam} 
-                className="bg-transparent text-primary-container border border-primary-container px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary-container hover:text-black transition-all font-montserrat"
+    <SiteShell>
+      {/* DNA hero */}
+      <section className="relative overflow-hidden border-b border-outline-variant/20">
+        <div className="absolute inset-0 opacity-40" style={{ background: nationGradient(team) }} />
+        <div className="relative px-gutter max-w-container-max mx-auto py-xl">
+          <div className="flex flex-col md:flex-row md:items-center gap-lg">
+            <div
+              className="w-24 h-24 rounded-2xl flex items-center justify-center font-black text-3xl text-on-background uppercase border-2 border-primary-container/50 shrink-0"
+              style={{ background: nationGradient(team) }}
+            >
+              {user.username.slice(0, 2)}
+            </div>
+            <div className="space-y-xs min-w-0">
+              <div className="inline-flex items-center gap-sm bg-primary-container/10 border border-primary-container/20 px-md py-xs rounded-full text-primary-container font-label-caps text-xs tracking-widest uppercase">
+                Football DNA
+              </div>
+              <h1 className="font-display-lg text-display-md text-on-background tracking-tight leading-none uppercase">
+                {user.username}
+              </h1>
+              <p className="font-headline-md text-headline-md text-on-surface-variant">
+                {team ? team : 'No nation picked yet'}
+                {user.tactical_style && (
+                  <span className="text-on-surface"> · {user.tactical_style}</span>
+                )}
+              </p>
+            </div>
+            <div className="md:ml-auto flex gap-md">
+              <Link
+                href="/profile/build"
+                className="bg-transparent text-primary-container border border-primary-container px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary-container hover:text-black transition-all font-montserrat"
               >
-                Change Team
+                Edit DNA
+              </Link>
+              <button
+                onClick={() => {
+                  logout()
+                  router.push('/')
+                }}
+                className="bg-transparent text-on-surface-variant border border-outline-variant/40 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:text-on-surface transition-all font-montserrat"
+              >
+                Sign out
               </button>
             </div>
           </div>
+
+          {/* Stat tiles */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-md mt-lg">
+            <StatTile label="Total Points" value={user.total_points.toLocaleString()} icon="stars" />
+            <StatTile label="Global Rank" value={rank ? `#${rank}` : '—'} icon="leaderboard" />
+            <StatTile
+              label="Rivalry"
+              value={user.rivalry_level != null ? `${user.rivalry_level}%` : '—'}
+              icon="local_fire_department"
+            />
+            <StatTile
+              label="Verified"
+              value={user.is_verified ? 'Yes' : 'No'}
+              icon={user.is_verified ? 'verified' : 'pending'}
+            />
+          </div>
         </div>
-      </header>
+      </section>
 
-      {/* Main Content Area */}
-      <main className="pt-[88px] flex-grow">
-        {/* Profile Header Hero */}
-        <section className="relative py-xl px-gutter max-w-container-max mx-auto text-center overflow-hidden border-b border-outline-variant/20">
-          <div className="absolute inset-0 bg-radial-gradient(circle, rgba(233,196,0,0.05) 0%, transparent 80%) pointer-events-none" />
-          <div className="max-w-2xl mx-auto space-y-sm relative z-10">
-            <div className="inline-flex items-center gap-sm bg-primary-container/10 border border-primary-container/20 px-md py-xs rounded-full text-primary-container font-label-caps text-xs tracking-widest uppercase">
-              Your Selected Team
-            </div>
-            <h1 className="font-display-lg text-display-lg text-on-background tracking-tighter leading-none uppercase">
-              {nation}
-            </h1>
-            <p className="font-headline-md text-headline-md text-on-surface-variant tracking-wide">
-              Star Player: <span className="text-white font-extrabold">{starPlayer}</span>
-            </p>
-          </div>
-        </section>
-
-        {/* Upcoming Matches Section */}
-        <section className="py-xl px-gutter max-w-[1000px] mx-auto space-y-lg">
-          <div className="flex items-center justify-between border-b border-outline-variant/30 pb-sm">
-            <h2 className="font-display-md text-headline-lg font-black tracking-tight text-white uppercase flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>stadium</span>
-              Upcoming Matches
-            </h2>
-            <span className="font-label-caps text-xs text-on-surface-variant/70 uppercase">
-              Real-time API Data
+      {/* Favorite team fixtures */}
+      <section className="px-gutter max-w-container-max mx-auto py-lg space-y-md">
+        <div className="flex items-center justify-between border-b border-outline-variant/30 pb-sm">
+          <h2 className="font-display-md text-headline-lg font-black tracking-tight text-white uppercase flex items-center gap-sm">
+            <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>
+              stadium
             </span>
-          </div>
+            {team ? `${team} Fixtures` : 'Your Fixtures'}
+          </h2>
+          <Link href="/matches" className="font-label-caps text-xs text-primary-container uppercase hover:underline">
+            All matches →
+          </Link>
+        </div>
 
-          {error ? (
-            <div className="bg-error-container/20 border border-error-container text-on-error-container p-md rounded-xl text-center font-body-md">
-              <span className="material-symbols-outlined block text-3xl mb-xs">error</span>
-              {error}
-            </div>
-          ) : matches.length === 0 ? (
-            <div className="glass-card p-xl text-center text-on-surface-variant font-body-md">
-              <span className="material-symbols-outlined block text-4xl mb-xs text-on-surface-variant/40">event_busy</span>
-              No upcoming matches scheduled for {nation}.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-md">
-              {matches.map((match) => (
-                <div key={match.id} className="glass-card p-md md:p-lg relative overflow-hidden transition-all hover:border-outline-variant/60 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md">
-                  <div className="absolute top-0 left-0 w-[4px] h-full bg-primary-container"></div>
-                  
-                  <div className="space-y-xs">
-                    <span className="bg-surface-variant/40 text-primary-container border border-outline-variant/30 text-[10px] font-bold font-label-caps px-sm py-0.5 rounded-full uppercase tracking-wider">
-                      {match.competition?.name || 'Competition'}
-                    </span>
-                    <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-widest pt-xs">
-                      {match.utcDate ? new Date(match.utcDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD'}
+        {loadingMatches ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="glass-card rounded-2xl h-24 animate-pulse" />
+            ))}
+          </div>
+        ) : !team ? (
+          <div className="glass-card rounded-2xl p-xl text-center space-y-sm">
+            <span className="material-symbols-outlined text-on-surface-variant text-[40px]">flag</span>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Pick your nation to see their road through the tournament.
+            </p>
+            <Link href="/profile/build" className="filter-chip filter-chip-active inline-block">
+              Build my DNA
+            </Link>
+          </div>
+        ) : fixtures.length === 0 ? (
+          <div className="glass-card rounded-2xl p-xl text-center text-on-surface-variant font-body-md">
+            No scheduled fixtures for {team} right now.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            {fixtures.map((m) => {
+              const finished = m.status === 'finished'
+              return (
+                <div key={m.id} className="glass-card rounded-2xl p-md flex items-center justify-between gap-sm">
+                  <div className="flex items-center gap-sm min-w-0 flex-1">
+                    <TeamCrest name={m.home_team} crest={m.home_team_crest} size={28} />
+                    <span className="font-body-md text-body-md text-on-background truncate">{m.home_team}</span>
+                  </div>
+                  <div className="text-center shrink-0 px-sm">
+                    {finished || m.status === 'live' ? (
+                      <span className="font-stats-number text-stats-number text-on-background tabular-nums">
+                        {m.home_score ?? 0}–{m.away_score ?? 0}
+                      </span>
+                    ) : (
+                      <span className="font-label-caps text-[11px] text-on-surface-variant">
+                        {matchTime(m.match_date)}
+                      </span>
+                    )}
+                    <p className="font-label-caps text-[9px] text-on-surface-variant uppercase mt-0.5">
+                      {matchDay(m.match_date)}
                     </p>
                   </div>
-
-                  <div className="flex items-center gap-md justify-center flex-1 max-w-xl">
-                    <div className="font-display-md text-headline-md text-on-background font-black text-right flex-1 truncate">{match.homeTeam?.name || 'TBD'}</div>
-                    <div className="bg-surface-variant/50 border border-outline-variant/30 px-3 py-1.5 rounded-lg text-primary-container font-label-caps text-xs font-black font-semibold">VS</div>
-                    <div className="font-display-md text-headline-md text-on-background font-black text-left flex-1 truncate">{match.awayTeam?.name || 'TBD'}</div>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-xs min-w-[120px]">
-                    <span className="font-label-caps text-[12px] font-bold text-on-surface-variant bg-white/[0.02] border border-white/5 px-3 py-1 rounded">
-                      {match.utcDate ? new Date(match.utcDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'Time TBD'}
-                    </span>
+                  <div className="flex items-center gap-sm min-w-0 flex-1 flex-row-reverse text-right">
+                    <TeamCrest name={m.away_team} crest={m.away_team_crest} size={28} />
+                    <span className="font-body-md text-body-md text-on-background truncate">{m.away_team}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full py-xl bg-surface-container-lowest border-t border-outline-variant/50 z-10">
-        <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto space-y-md">
-          <div className="flex flex-col items-center md:items-start gap-xs">
-            <span className="font-headline-md text-headline-md text-primary-container font-black">WorldCupDNA</span>
-            <p className="font-body-md text-body-md text-on-tertiary-container">© 2026 WorldCupDNA. All Rights Reserved. One Dream, One World.</p>
+              )
+            })}
           </div>
-          <div className="flex flex-wrap justify-center gap-md">
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Terms of Service</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Fan Support</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="https://www.fifa.com" target="_blank" rel="noopener noreferrer">Official FIFA Site</Link>
-          </div>
-        </div>
-      </footer>
+        )}
+      </section>
+    </SiteShell>
+  )
+}
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 flex items-center justify-around z-50">
-        {[
-          { href: '/', icon: 'home', label: 'Home', active: false },
-          { href: '/matches', icon: 'sports_soccer', label: 'Matches', active: false },
-          { href: '/predictions', icon: 'analytics', label: 'Predict', active: false },
-          { href: '/leaderboard', icon: 'leaderboard', label: 'Ranks', active: false },
-          { href: '/venues', icon: 'location_on', label: 'Venues', active: false },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex flex-col items-center gap-xs transition-colors ${item.active ? 'text-primary-container' : 'text-on-surface-variant hover:text-primary'}`}
-          >
-            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
-            <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+function StatTile({ label, value, icon }: { label: string; value: string; icon: string }) {
+  return (
+    <div className="glass-card rounded-xl p-md flex items-center gap-md">
+      <span className="gold-icon-box shrink-0">
+        <span className="material-symbols-outlined">{icon}</span>
+      </span>
+      <div className="min-w-0">
+        <p className="font-stats-number text-stats-number text-on-background tabular-nums truncate">{value}</p>
+        <p className="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wider truncate">
+          {label}
+        </p>
+      </div>
     </div>
   )
 }

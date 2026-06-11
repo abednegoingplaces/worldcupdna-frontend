@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Hanken_Grotesk, Montserrat, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth";
 
 const anton = Anton({
   weight: "400",
@@ -49,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-background text-on-background font-inter max-w-screen overflow-x-hidden">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

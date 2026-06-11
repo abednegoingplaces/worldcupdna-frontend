@@ -1,66 +1,60 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { nationGradient } from '@/lib/nationColors'
-
-const NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/matches', label: 'Matches' },
-  { href: '/predictions', label: 'Predictions' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/venues', label: 'Watch Parties' },
-]
+import { useAuth } from '@/lib/auth'
+import { api, ApiError } from '@/lib/api'
 
 const PLAYERS = [
-  { name: 'HIRVING LOZANO', nation: 'MEXICO', color: '#006847' },
-  { name: 'JOSE FAJARDO', nation: 'PANAMA', color: '#DA121A' },
-  { name: 'FRANTZDY PIERROT', nation: 'HAITI', color: '#00205B' },
-  { name: 'LEANDRO BACUNA', nation: 'CURAÇAO', color: '#002B7F' },
-  { name: 'ALPHONSO DAVIES', nation: 'CANADA', color: '#FF0000' },
-  { name: 'CHRISTIAN PULISIC', nation: 'USA', color: '#002868' },
-  { name: 'TAKUMI MINAMINO', nation: 'JAPAN', color: '#BC002D' },
-  { name: 'MEHDI TAREMI', nation: 'IRAN', color: '#239F40' },
-  { name: 'SON HEUNG-MIN', nation: 'SOUTH KOREA', color: '#CD2E3A' },
-  { name: 'MATHEW LECKIE', nation: 'AUSTRALIA', color: '#FFCD00' },
-  { name: 'AKRAM AFIF', nation: 'QATAR', color: '#8D1B3D' },
-  { name: 'SALEM AL-DAWSARI', nation: 'SAUDI ARABIA', color: '#006C35' },
-  { name: 'AYMEN HUSSEIN', nation: 'IRAQ', color: '#007A3D' },
-  { name: 'ELDOR SHOMURODOV', nation: 'UZBEKISTAN', color: '#1EB53A' },
-  { name: 'YAZAN AL-NAIMAT', nation: 'JORDAN', color: '#007A3D' },
-  { name: 'ACHRAF HAKIMI', nation: 'MOROCCO', color: '#c1272d' },
-  { name: 'SADIO MANE', nation: 'SENEGAL', color: '#00853F' },
-  { name: 'MOHAMED SALAH', nation: 'EGYPT', color: '#CE1126' },
-  { name: 'YASSINE MERIAH', nation: 'TUNISIA', color: '#E70013' },
-  { name: 'RIYAD MAHREZ', nation: 'ALGERIA', color: '#006233' },
-  { name: 'PERCY TAU', nation: 'SOUTH AFRICA', color: '#007749' },
-  { name: 'SEBASTIEN HALLER', nation: 'IVORY COAST', color: '#F77F00' },
-  { name: 'MOHAMMED KUDUS', nation: 'GHANA', color: '#006B3F' },
-  { name: 'CHANCEL MBEMBA', nation: 'DR CONGO', color: '#007FFF' },
-  { name: 'JULIO TAVARES', nation: 'CAPE VERDE', color: '#003893' },
-  { name: 'LIONEL MESSI', nation: 'ARGENTINA', color: '#74acdf' },
-  { name: 'VINICIUS JR', nation: 'BRAZIL', color: '#009c3b' },
-  { name: 'JAMES RODRIGUEZ', nation: 'COLOMBIA', color: '#FCD116' },
-  { name: 'ENNER VALENCIA', nation: 'ECUADOR', color: '#FFD100' },
-  { name: 'DARWIN NUNEZ', nation: 'URUGUAY', color: '#5EB6E4' },
-  { name: 'MIGUEL ALMIRON', nation: 'PARAGUAY', color: '#D52B1E' },
-  { name: 'CHRIS WOOD', nation: 'NEW ZEALAND', color: '#000000' },
-  { name: 'KYLIAN MBAPPE', nation: 'FRANCE', color: '#002395' },
-  { name: 'LAMINE YAMAL', nation: 'SPAIN', color: '#c60b1e' },
-  { name: 'HARRY KANE', nation: 'ENGLAND', color: '#CF1B1B' },
-  { name: 'CRISTIANO RONALDO', nation: 'PORTUGAL', color: '#006600' },
-  { name: 'JAMAL MUSIALA', nation: 'GERMANY', color: '#000000' },
-  { name: 'VIRGIL VAN DIJK', nation: 'NETHERLANDS', color: '#FF6600' },
-  { name: 'KEVIN DE BRUYNE', nation: 'BELGIUM', color: '#EF3340' },
-  { name: 'LUKA MODRIC', nation: 'CROATIA', color: '#FF0000' },
-  { name: 'GRANIT XHAKA', nation: 'SWITZERLAND', color: '#FF0000' },
-  { name: 'MARCEL SABITZER', nation: 'AUSTRIA', color: '#ED2939' },
-  { name: 'ANDY ROBERTSON', nation: 'SCOTLAND', color: '#004B84' },
-  { name: 'ERLING HAALAND', nation: 'NORWAY', color: '#BA0C2F' },
-  { name: 'VIKTOR GYOKERES', nation: 'SWEDEN', color: '#FECC02' },
-  { name: 'HAKAN CALHANOGLU', nation: 'TURKEY', color: '#E30A17' },
-  { name: 'PATRIK SCHICK', nation: 'CZECHIA', color: '#D7141A' },
-  { name: 'EDIN DZEKO', nation: 'BOSNIA AND HERZEGOVINA', color: '#002F6C' },
+  { name: 'HIRVING LOZANO', nation: 'MEXICO' },
+  { name: 'JOSE FAJARDO', nation: 'PANAMA' },
+  { name: 'FRANTZDY PIERROT', nation: 'HAITI' },
+  { name: 'LEANDRO BACUNA', nation: 'CURAÇAO' },
+  { name: 'ALPHONSO DAVIES', nation: 'CANADA' },
+  { name: 'CHRISTIAN PULISIC', nation: 'USA' },
+  { name: 'TAKUMI MINAMINO', nation: 'JAPAN' },
+  { name: 'MEHDI TAREMI', nation: 'IRAN' },
+  { name: 'SON HEUNG-MIN', nation: 'SOUTH KOREA' },
+  { name: 'MATHEW LECKIE', nation: 'AUSTRALIA' },
+  { name: 'AKRAM AFIF', nation: 'QATAR' },
+  { name: 'SALEM AL-DAWSARI', nation: 'SAUDI ARABIA' },
+  { name: 'AYMEN HUSSEIN', nation: 'IRAQ' },
+  { name: 'ELDOR SHOMURODOV', nation: 'UZBEKISTAN' },
+  { name: 'YAZAN AL-NAIMAT', nation: 'JORDAN' },
+  { name: 'ACHRAF HAKIMI', nation: 'MOROCCO' },
+  { name: 'SADIO MANE', nation: 'SENEGAL' },
+  { name: 'MOHAMED SALAH', nation: 'EGYPT' },
+  { name: 'YASSINE MERIAH', nation: 'TUNISIA' },
+  { name: 'RIYAD MAHREZ', nation: 'ALGERIA' },
+  { name: 'PERCY TAU', nation: 'SOUTH AFRICA' },
+  { name: 'SEBASTIEN HALLER', nation: 'IVORY COAST' },
+  { name: 'MOHAMMED KUDUS', nation: 'GHANA' },
+  { name: 'CHANCEL MBEMBA', nation: 'DR CONGO' },
+  { name: 'JULIO TAVARES', nation: 'CAPE VERDE' },
+  { name: 'LIONEL MESSI', nation: 'ARGENTINA' },
+  { name: 'VINICIUS JR', nation: 'BRAZIL' },
+  { name: 'JAMES RODRIGUEZ', nation: 'COLOMBIA' },
+  { name: 'ENNER VALENCIA', nation: 'ECUADOR' },
+  { name: 'DARWIN NUNEZ', nation: 'URUGUAY' },
+  { name: 'MIGUEL ALMIRON', nation: 'PARAGUAY' },
+  { name: 'CHRIS WOOD', nation: 'NEW ZEALAND' },
+  { name: 'KYLIAN MBAPPE', nation: 'FRANCE' },
+  { name: 'LAMINE YAMAL', nation: 'SPAIN' },
+  { name: 'HARRY KANE', nation: 'ENGLAND' },
+  { name: 'CRISTIANO RONALDO', nation: 'PORTUGAL' },
+  { name: 'JAMAL MUSIALA', nation: 'GERMANY' },
+  { name: 'VIRGIL VAN DIJK', nation: 'NETHERLANDS' },
+  { name: 'KEVIN DE BRUYNE', nation: 'BELGIUM' },
+  { name: 'LUKA MODRIC', nation: 'CROATIA' },
+  { name: 'GRANIT XHAKA', nation: 'SWITZERLAND' },
+  { name: 'MARCEL SABITZER', nation: 'AUSTRIA' },
+  { name: 'ANDY ROBERTSON', nation: 'SCOTLAND' },
+  { name: 'ERLING HAALAND', nation: 'NORWAY' },
+  { name: 'VIKTOR GYOKERES', nation: 'SWEDEN' },
+  { name: 'HAKAN CALHANOGLU', nation: 'TURKEY' },
+  { name: 'PATRIK SCHICK', nation: 'CZECHIA' },
+  { name: 'EDIN DZEKO', nation: 'BOSNIA AND HERZEGOVINA' },
 ]
 
 const TACTICS = [
@@ -72,6 +66,9 @@ const TACTICS = [
 
 export default function BuildProfilePage() {
   const router = useRouter()
+  const { isAuthenticated, loading: authLoading, register, setUser } = useAuth()
+
+  // Authenticated users skip the account step (they already have one).
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -85,90 +82,80 @@ export default function BuildProfilePage() {
     rivalry_level: 50,
   })
 
-  const handleRegister = async () => {
+  const accountStep = !isAuthenticated // whether step 1 (account creation) applies
+  const totalSteps = accountStep ? 3 : 2
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && step === 1) setStep(2)
+  }, [authLoading, isAuthenticated, step])
+
+  async function finish() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('https://worldcupdna-backend.onrender.com/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
+      if (isAuthenticated) {
+        // Existing user — just persist their DNA choices.
+        const updated = await api.updateInterests({
+          favorite_team: formData.favorite_team,
+          tactical_style: formData.tactical_style,
+          rivalry_level: formData.rivalry_level,
+        })
+        setUser(updated)
+      } else {
+        // New user — register with the DNA captured in this flow.
+        await register({
+          username: formData.username.trim(),
+          email: formData.email.trim(),
           password: formData.password,
           favorite_team: formData.favorite_team,
           tactical_style: formData.tactical_style,
           rivalry_level: formData.rivalry_level,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        localStorage.setItem('token', data.access_token)
-        localStorage.setItem('selectedNation', formData.favorite_team)
-        // Also map favorite team to a selected player from list
-        const playerObj = PLAYERS.find(p => p.nation === formData.favorite_team)
-        if (playerObj) {
-          localStorage.setItem('selectedPlayer', playerObj.name)
-        } else {
-          localStorage.setItem('selectedPlayer', 'Key Star')
-        }
-        localStorage.setItem('tacticalStyle', formData.tactical_style)
-        localStorage.setItem('rivalryLevel', formData.rivalry_level.toString())
-        localStorage.setItem('username', formData.username)
-        router.push('/profile')
-      } else {
-        setError(data.detail || 'Registration failed')
+        })
       }
-    } catch {
-      setError('An error occurred. Please try again.')
+      router.push('/profile')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
+  // progress is relative to the steps that actually apply
+  const shownStep = accountStep ? step : step - 1
+  const progress = (shownStep / totalSteps) * 100
+
   return (
     <div className="bg-background text-on-background min-h-screen pb-20 md:pb-0 font-inter flex flex-col">
-      {/* TopNavBar */}
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
         <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
-          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
+          <Link href="/" className="font-display-md text-headline-md font-black tracking-tighter text-primary-container">
             WorldCupDNA
           </Link>
-          <nav className="hidden md:flex items-center space-x-lg">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-headline-md text-on-surface-variant hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <Link
-            href="/auth"
-            className="bg-primary-container text-on-primary-fixed px-md py-sm font-label-caps text-label-caps rounded-lg uppercase tracking-widest font-bold hover:bg-primary-fixed transition-all duration-300 active:scale-95 glow-gold text-center"
-          >
-            Login
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              href="/auth"
+              className="bg-primary-container text-on-primary-fixed px-md py-sm font-label-caps text-label-caps rounded-lg uppercase tracking-widest font-bold hover:bg-primary-fixed transition-all active:scale-95 glow-gold"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
 
       <div className="pt-[88px] flex-grow flex flex-col min-h-screen">
-        {/* Progress Bar */}
         <div className="w-full bg-white/5 h-1">
           <div
             className="h-full bg-primary-container transition-all duration-300 shadow-[0_0_8px_#e9c400]"
-            style={{ width: `${(step / 3) * 100}%` }}
+            style={{ width: `${progress}%` }}
           />
         </div>
         <p className="text-center py-3 font-label-caps text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">
-          Step {step} of 3
+          Step {shownStep} of {totalSteps}
         </p>
 
         <div className="flex-1 flex flex-col items-center px-gutter py-8 md:py-12 relative justify-center">
-          {step === 1 && (
-            <div className="w-full max-w-md z-10 space-y-lg animate-in fade-in duration-300">
+          {step === 1 && accountStep && (
+            <div className="w-full max-w-md z-10 space-y-lg">
               <div className="text-center space-y-xs">
                 <h1 className="font-display-md text-display-md font-black uppercase tracking-tight text-primary-container">
                   Join the DNA
@@ -194,26 +181,34 @@ export default function BuildProfilePage() {
                   onClick={() => {
                     if (formData.username && formData.email && formData.password) setStep(2)
                   }}
+                  disabled={!formData.username || !formData.email || !formData.password}
                   className={`w-full py-4 mt-md font-montserrat uppercase tracking-wider rounded-lg font-bold text-sm ${
-                    formData.username && formData.email && formData.password 
-                      ? 'btn-primary glow-gold active:scale-[0.98]' 
+                    formData.username && formData.email && formData.password
+                      ? 'btn-primary glow-gold active:scale-[0.98]'
                       : 'bg-surface-variant/40 text-on-surface-variant/45 cursor-not-allowed border border-outline-variant/20'
                   }`}
-                  disabled={!formData.username || !formData.email || !formData.password}
                 >
                   Continue
                 </button>
+                <p className="text-center font-body-md text-body-md text-on-surface-variant">
+                  Already have an account?{' '}
+                  <Link href="/auth" className="text-primary-container hover:underline">
+                    Sign in
+                  </Link>
+                </p>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="w-full max-w-5xl z-10 flex flex-col h-full animate-in fade-in duration-300">
+            <div className="w-full max-w-5xl z-10 flex flex-col h-full">
               <div className="text-center mb-8 space-y-xs">
                 <h1 className="font-display-md text-display-md font-black uppercase tracking-tight text-white">
                   Who Do You Ride With?
                 </h1>
-                <p className="text-primary-container font-montserrat text-xs uppercase tracking-widest font-black">Select Your Nation</p>
+                <p className="text-primary-container font-montserrat text-xs uppercase tracking-widest font-black">
+                  Select Your Nation
+                </p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow overflow-y-auto pb-28 max-h-[60vh] no-scrollbar">
@@ -225,16 +220,13 @@ export default function BuildProfilePage() {
                       type="button"
                       onClick={() => setFormData({ ...formData, favorite_team: p.nation })}
                       className={`ds-card relative overflow-hidden text-left transition-all hover:scale-[1.02] border border-outline-variant/30 ${
-                        isSelected 
-                          ? 'ring-2 ring-primary-container shadow-[0_0_20px_rgba(233,196,0,0.3)] border-primary-container' 
+                        isSelected
+                          ? 'ring-2 ring-primary-container shadow-[0_0_20px_rgba(233,196,0,0.3)] border-primary-container'
                           : 'hover:bg-white/[0.02]'
                       }`}
                     >
-                      <div
-                        className="h-20 flex items-end p-3 relative"
-                        style={{ background: nationGradient(p.nation) }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="h-20 flex items-end p-3 relative" style={{ background: nationGradient(p.nation) }}>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         <span className="font-display-md text-xs font-black text-white uppercase relative z-10 tracking-widest">
                           {p.nation.slice(0, 3)}
                         </span>
@@ -253,12 +245,14 @@ export default function BuildProfilePage() {
                 })}
               </div>
 
-              <div className="fixed bottom-16 md:bottom-0 left-0 right-0 p-gutter bg-background/95 backdrop-blur-md border-t border-outline-variant/30 flex justify-center z-40">
+              <div className="fixed bottom-16 md:bottom-0 left-0 right-0 p-gutter bg-background/95 backdrop-blur-md border-t border-outline-variant/30 flex flex-col items-center gap-sm z-40">
                 <button
                   onClick={() => formData.favorite_team && setStep(3)}
                   disabled={!formData.favorite_team}
                   className={`w-full max-w-md py-4 font-montserrat uppercase tracking-wider rounded-lg font-bold text-sm ${
-                    formData.favorite_team ? 'btn-primary glow-gold active:scale-[0.98]' : 'bg-surface-variant/40 text-on-surface-variant/45 cursor-not-allowed border border-outline-variant/20'
+                    formData.favorite_team
+                      ? 'btn-primary glow-gold active:scale-[0.98]'
+                      : 'bg-surface-variant/40 text-on-surface-variant/45 cursor-not-allowed border border-outline-variant/20'
                   }`}
                 >
                   Continue
@@ -268,7 +262,7 @@ export default function BuildProfilePage() {
           )}
 
           {step === 3 && (
-            <div className="w-full max-w-xl z-10 space-y-lg animate-in fade-in duration-300">
+            <div className="w-full max-w-xl z-10 space-y-lg">
               <div className="text-center space-y-xs">
                 <h1 className="font-display-md text-display-md font-black uppercase tracking-tight text-white">
                   Tactical Identity
@@ -290,7 +284,11 @@ export default function BuildProfilePage() {
                           : 'border-outline-variant/30 hover:bg-white/[0.04]'
                       }`}
                     >
-                      <p className={`font-montserrat font-black uppercase tracking-wider text-xs mb-2 ${isSelected ? 'text-primary-container' : 'text-on-surface'}`}>
+                      <p
+                        className={`font-montserrat font-black uppercase tracking-wider text-xs mb-2 ${
+                          isSelected ? 'text-primary-container' : 'text-on-surface'
+                        }`}
+                      >
                         {t.id}
                       </p>
                       <p className="font-body-md text-[11px] text-on-surface-variant leading-relaxed">{t.desc}</p>
@@ -300,7 +298,9 @@ export default function BuildProfilePage() {
               </div>
 
               <div className="bg-surface-container/40 p-md rounded-xl border border-outline-variant/20 space-y-md">
-                <p className="text-center font-montserrat font-bold uppercase text-white tracking-widest text-xs">Rivalry Intensity</p>
+                <p className="text-center font-montserrat font-bold uppercase text-white tracking-widest text-xs">
+                  Rivalry Intensity
+                </p>
                 <div className="flex items-center gap-4">
                   <span className="text-2xl">💀</span>
                   <input
@@ -315,21 +315,25 @@ export default function BuildProfilePage() {
                 </div>
               </div>
 
-              {error && <p className="text-red-400 text-center text-sm font-label-caps">{error}</p>}
+              {error && <p className="text-on-error-container text-center text-sm font-label-caps">{error}</p>}
 
               <button
-                onClick={handleRegister}
+                onClick={finish}
                 disabled={loading || !formData.tactical_style}
                 className={`w-full py-5 font-montserrat text-md uppercase tracking-wider rounded-lg font-black ${
-                  formData.tactical_style ? 'btn-primary glow-gold active:scale-[0.98]' : 'bg-surface-variant/40 text-on-surface-variant/45 cursor-not-allowed border border-outline-variant/20'
+                  formData.tactical_style
+                    ? 'btn-primary glow-gold active:scale-[0.98]'
+                    : 'bg-surface-variant/40 text-on-surface-variant/45 cursor-not-allowed border border-outline-variant/20'
                 }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-xs">
-                    <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-                    Generating DNA Badge...
+                    <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Generating DNA Badge…
                   </span>
-                ) : 'Generate My DNA Badge'}
+                ) : (
+                  'Generate My DNA Badge'
+                )}
               </button>
 
               <button
@@ -342,27 +346,6 @@ export default function BuildProfilePage() {
           )}
         </div>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 flex items-center justify-around z-50">
-        {[
-          { href: '/', icon: 'home', label: 'Home', active: false },
-          { href: '/matches', icon: 'sports_soccer', label: 'Matches', active: false },
-          { href: '/predictions', icon: 'analytics', label: 'Predict', active: false },
-          { href: '/leaderboard', icon: 'leaderboard', label: 'Ranks', active: false },
-          { href: '/profile/build', icon: 'person', label: 'DNA', active: true },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex flex-col items-center gap-xs transition-colors ${item.active ? 'text-primary-container' : 'text-on-surface-variant hover:text-primary'}`}
-          >
-            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
-            <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
     </div>
   )
 }
-

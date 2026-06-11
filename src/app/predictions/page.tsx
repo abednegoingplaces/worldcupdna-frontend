@@ -1,367 +1,291 @@
 'use client'
 
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { SiteShell } from '@/components/layout/SiteShell'
+import { TeamCrest } from '@/components/ui'
+import { api, ApiError } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
+import { matchKickoff } from '@/lib/format'
+import type { Match, Prediction } from '@/types'
+
+interface CardState {
+  home: string
+  away: string
+  saving: boolean
+  saved: boolean
+  error: string | null
+}
+
+const blankCard: CardState = { home: '', away: '', saving: false, saved: false, error: null }
 
 export default function PredictionsPage() {
-  const [predicted, setPredicted] = useState<Record<string, boolean>>({})
+  const { isAuthenticated, loading: authLoading, refresh } = useAuth()
 
-  const handlePredict = (matchId: string) => {
-    setPredicted(prev => ({ ...prev, [matchId]: true }))
-    setTimeout(() => {
-      setPredicted(prev => ({ ...prev, [matchId]: false }))
-    }, 2000)
+  const [matches, setMatches] = useState<Match[]>([])
+  const [predictions, setPredictions] = useState<Prediction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [cards, setCards] = useState<Record<string, CardState>>({})
+
+  const predByMatch = useMemo(() => {
+    const map: Record<string, Prediction> = {}
+    for (const p of predictions) map[p.match_id] = p
+    return map
+  }, [predictions])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const upcoming = await api.upcoming(20)
+      setMatches(upcoming.matches)
+
+      const seeded: Record<string, CardState> = {}
+      if (isAuthenticated) {
+        const mine = await api.myPredictions()
+        setPredictions(mine.predictions)
+        for (const p of mine.predictions) {
+          seeded[p.match_id] = {
+            ...blankCard,
+            home: String(p.predicted_home),
+            away: String(p.predicted_away),
+          }
+        }
+      } else {
+        setPredictions([])
+      }
+      setCards(seeded)
+    } catch (err) {
+      setLoadError(err instanceof ApiError ? err.message : 'Could not load matches.')
+    } finally {
+      setLoading(false)
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!authLoading) load()
+  }, [authLoading, load])
+
+  function patchCard(id: string, patch: Partial<CardState>) {
+    setCards((prev) => ({ ...prev, [id]: { ...(prev[id] ?? blankCard), ...patch } }))
+  }
+
+  async function submit(m: Match) {
+    const c = cards[m.id] ?? blankCard
+    const home = parseInt(c.home, 10)
+    const away = parseInt(c.away, 10)
+    if (Number.isNaN(home) || Number.isNaN(away) || home < 0 || away < 0) {
+      patchCard(m.id, { error: 'Enter both scores.' })
+      return
+    }
+    patchCard(m.id, { saving: true, error: null, saved: false })
+    try {
+      const existing = predByMatch[m.id]
+      const saved = existing
+        ? await api.updatePrediction(existing.id, home, away)
+        : await api.predict(m.id, home, away)
+      setPredictions((prev) => [...prev.filter((p) => p.match_id !== m.id), saved])
+      patchCard(m.id, { saving: false, saved: true })
+      setTimeout(() => patchCard(m.id, { saved: false }), 2000)
+    } catch (err) {
+      patchCard(m.id, {
+        saving: false,
+        error: err instanceof ApiError ? err.message : 'Could not save.',
+      })
+    }
+  }
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <SiteShell>
+        <Header />
+        <div className="px-gutter max-w-container-max mx-auto py-xl">
+          <div className="glass-card rounded-2xl p-xl text-center max-w-lg mx-auto space-y-md">
+            <span className="material-symbols-outlined text-primary-container text-[48px]">lock</span>
+            <h2 className="font-headline-lg text-headline-lg text-on-background">Sign in to predict</h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Predict scores for real World Cup fixtures, earn points and climb the global leaderboard.
+            </p>
+            <Link
+              href="/auth?next=/predictions"
+              className="inline-block bg-primary-container text-on-primary-fixed px-lg py-md rounded-lg font-headline-md font-bold glow-gold active:scale-95 transition-all"
+            >
+              Sign in / Join
+            </Link>
+          </div>
+        </div>
+      </SiteShell>
+    )
   }
 
   return (
-    <div className="flex flex-col min-h-screen pb-16 md:pb-0 bg-background text-on-background">
-      <style dangerouslySetInnerHTML={{ __html: `
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
-      `}} />
-
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
-        <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
-          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
-            WorldCupDNA
-          </Link>
-          <nav className="hidden md:flex items-center space-x-lg">
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/">
-              Home
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/matches">
-              Matches
-            </Link>
-            <Link className="font-headline-md text-primary-container border-b-2 border-primary-container pb-1 font-bold" href="/predictions">
-              Predictions
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/leaderboard">
-              Leaderboard
-            </Link>
-            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/venues">
-              Watch Parties
-            </Link>
-          </nav>
-          <div className="flex items-center gap-md">
-            <div className="hidden lg:flex items-center bg-surface-variant/30 px-md py-xs rounded-full border border-outline-variant/30">
-              <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
-              <input className="bg-transparent border-none focus:ring-0 text-body-md placeholder:text-on-surface-variant/50 w-32 outline-none text-on-surface" placeholder="Search matches..." type="text"/>
-            </div>
-            <div className="flex items-center gap-sm">
-              <button className="p-xs text-on-surface-variant hover:bg-surface-variant/20 rounded-full transition-all duration-300 cursor-pointer">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-              <button className="p-xs text-on-surface-variant hover:bg-surface-variant/20 rounded-full transition-all duration-300 cursor-pointer">
-                <span className="material-symbols-outlined">person</span>
-              </button>
-            </div>
-            <Link href="/auth" className="hidden sm:block bg-primary-container text-on-primary-fixed px-md py-sm font-label-caps text-label-caps rounded-lg uppercase tracking-widest font-bold hover:bg-primary-fixed transition-all duration-300 active:scale-95 glow-gold text-center">
-              Join the Game
-            </Link>
+    <SiteShell>
+      <Header />
+      <div className="px-gutter max-w-container-max mx-auto py-lg space-y-lg">
+        {loadError && (
+          <div className="glass-card rounded-xl p-md flex items-center gap-sm text-on-error-container border border-error-container/30">
+            <span className="material-symbols-outlined">error</span>
+            <span className="font-body-md">{loadError}</span>
+            <button onClick={load} className="ml-auto filter-chip">Retry</button>
           </div>
-        </div>
-      </header>
+        )}
 
-      {/* Main Content */}
-      <main className="pt-[88px] flex-grow">
-
-        {/* ═══ Section: Upcoming Matches ═══ */}
-        <section className="py-xl px-gutter max-w-container-max mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-lg gap-md">
-            <h2 className="font-display-md text-display-md text-primary-container font-black uppercase tracking-widest">
-              Upcoming Matches
-            </h2>
-            <div className="flex items-center gap-sm">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary-fixed"></span>
-              </span>
-              <span className="font-label-caps text-label-caps text-secondary-fixed uppercase tracking-wider">
-                Live Updates Active
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-lg">
-
-            {/* Match Card 1 — USA vs MEXICO */}
-            <div className="glass-card p-6 rounded-xl hover:border-primary-container/30 transition-all duration-300 group">
-              <div className="flex flex-col md:flex-row items-center gap-md md:gap-lg">
-                {/* Left Meta */}
-                <div className="flex flex-col items-center md:items-start min-w-[160px] gap-xs">
-                  <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                    June 14, 2026
-                  </span>
-                  <span className="font-headline-md text-body-md text-primary-container font-bold uppercase tracking-widest">
-                    Group A
-                  </span>
-                  <div className="flex items-center gap-1 text-on-surface-variant/60">
-                    <span className="material-symbols-outlined text-[16px]">location_on</span>
-                    <span className="font-label-caps text-[11px]">MetLife Stadium, NJ</span>
-                  </div>
-                </div>
-
-                {/* Center — Teams + Inputs */}
-                <div className="flex-1 flex items-center justify-center gap-md w-full md:w-auto">
-                  {/* Team 1 */}
-                  <div className="flex flex-col items-center gap-sm">
-                    <div className="w-12 h-8 rounded bg-blue-700 shadow-lg group-hover:scale-110 transition-transform" title="USA" />
-                    <span className="font-headline-md text-body-md font-bold text-on-background">USA</span>
+        {loading ? (
+          <SkeletonGrid />
+        ) : matches.length === 0 ? (
+          <EmptyState
+            icon="event_busy"
+            title="No upcoming fixtures"
+            body="Once the schedule is live, upcoming matches will appear here to predict."
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
+            {matches.map((m) => {
+              const c = cards[m.id] ?? blankCard
+              const pred = predByMatch[m.id]
+              return (
+                <div key={m.id} className="glass-card rounded-2xl p-md md:p-lg space-y-md">
+                  <div className="flex items-center justify-between">
+                    <span className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider">
+                      {m.group_name || m.stage || 'World Cup 2026'}
+                    </span>
+                    <span className="font-label-caps text-[11px] text-on-surface-variant">
+                      {matchKickoff(m.match_date)}
+                    </span>
                   </div>
 
-                  {/* Score Inputs */}
-                  <div className="flex items-center gap-sm">
-                    <input
-                      id="match1-score-home"
-                      className="w-14 h-14 bg-surface-container-highest border-2 border-outline-variant text-center text-headline-md font-bold rounded-xl focus:border-primary-container focus:ring-0 transition-colors text-on-surface outline-none"
-                      placeholder="0"
-                      type="number"
-                      min={0}
-                      max={9}
-                      onInput={(e) => { const t = e.target as HTMLInputElement; if (t.value.length > 1) t.value = t.value.slice(0,1) }}
-                    />
-                    <span className="font-display-md text-headline-md text-outline-variant select-none">:</span>
-                    <input
-                      id="match1-score-away"
-                      className="w-14 h-14 bg-surface-container-highest border-2 border-outline-variant text-center text-headline-md font-bold rounded-xl focus:border-primary-container focus:ring-0 transition-colors text-on-surface outline-none"
-                      placeholder="0"
-                      type="number"
-                      min={0}
-                      max={9}
-                      onInput={(e) => { const t = e.target as HTMLInputElement; if (t.value.length > 1) t.value = t.value.slice(0,1) }}
-                    />
+                  <div className="flex items-center justify-between gap-sm">
+                    <TeamSide name={m.home_team} crest={m.home_team_crest} />
+                    <div className="flex items-center gap-sm shrink-0">
+                      <ScoreInput
+                        value={c.home}
+                        onChange={(v) => patchCard(m.id, { home: v, saved: false, error: null })}
+                      />
+                      <span className="text-on-surface-variant font-bold">:</span>
+                      <ScoreInput
+                        value={c.away}
+                        onChange={(v) => patchCard(m.id, { away: v, saved: false, error: null })}
+                      />
+                    </div>
+                    <TeamSide name={m.away_team} crest={m.away_team_crest} alignRight />
                   </div>
 
-                  {/* Team 2 */}
-                  <div className="flex flex-col items-center gap-sm">
-                    <div className="w-12 h-8 rounded bg-green-700 shadow-lg group-hover:scale-110 transition-transform" title="Mexico" />
-                    <span className="font-headline-md text-body-md font-bold text-on-background">MEXICO</span>
-                  </div>
-                </div>
+                  {c.error && (
+                    <p className="text-on-error-container font-body-md text-body-md text-center">{c.error}</p>
+                  )}
 
-                {/* Right — Predict Button */}
-                <div className="w-full md:w-auto">
                   <button
-                    id="predict-match-1"
-                    onClick={() => handlePredict('match-1')}
-                    className={`w-full md:w-auto font-black px-6 py-3 rounded-lg active:scale-95 transition-all duration-300 uppercase font-label-caps text-label-caps tracking-widest cursor-pointer ${
-                      predicted['match-1']
-                        ? 'bg-secondary-fixed text-background'
-                        : 'bg-primary-container text-background glow-gold'
+                    onClick={() => submit(m)}
+                    disabled={c.saving}
+                    className={`w-full py-3 rounded-lg font-montserrat font-bold uppercase tracking-wider text-sm transition-all active:scale-[0.98] disabled:opacity-60 ${
+                      c.saved ? 'bg-secondary-fixed text-on-secondary' : 'btn-primary glow-gold'
                     }`}
                   >
-                    {predicted['match-1'] ? 'SAVED!' : 'PREDICT'}
+                    {c.saving ? 'Saving…' : c.saved ? 'Saved!' : pred ? 'Update Prediction' : 'Predict'}
                   </button>
                 </div>
-              </div>
-            </div>
-
-            {/* Match Card 2 — BRAZIL vs FRANCE */}
-            <div className="glass-card p-6 rounded-xl hover:border-primary-container/30 transition-all duration-300 group">
-              <div className="flex flex-col md:flex-row items-center gap-md md:gap-lg">
-                {/* Left Meta */}
-                <div className="flex flex-col items-center md:items-start min-w-[160px] gap-xs">
-                  <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                    June 15, 2026
-                  </span>
-                  <span className="font-headline-md text-body-md text-primary-container font-bold uppercase tracking-widest">
-                    Group B
-                  </span>
-                  <div className="flex items-center gap-1 text-on-surface-variant/60">
-                    <span className="material-symbols-outlined text-[16px]">location_on</span>
-                    <span className="font-label-caps text-[11px]">SoFi Stadium, CA</span>
-                  </div>
-                </div>
-
-                {/* Center — Teams + Inputs */}
-                <div className="flex-1 flex items-center justify-center gap-md w-full md:w-auto">
-                  {/* Team 1 */}
-                  <div className="flex flex-col items-center gap-sm">
-                    <div className="w-12 h-8 rounded bg-yellow-600 shadow-lg group-hover:scale-110 transition-transform" title="Brazil" />
-                    <span className="font-headline-md text-body-md font-bold text-on-background">BRAZIL</span>
-                  </div>
-
-                  {/* Score Inputs */}
-                  <div className="flex items-center gap-sm">
-                    <input
-                      id="match2-score-home"
-                      className="w-14 h-14 bg-surface-container-highest border-2 border-outline-variant text-center text-headline-md font-bold rounded-xl focus:border-primary-container focus:ring-0 transition-colors text-on-surface outline-none"
-                      placeholder="0"
-                      type="number"
-                      min={0}
-                      max={9}
-                      onInput={(e) => { const t = e.target as HTMLInputElement; if (t.value.length > 1) t.value = t.value.slice(0,1) }}
-                    />
-                    <span className="font-display-md text-headline-md text-outline-variant select-none">:</span>
-                    <input
-                      id="match2-score-away"
-                      className="w-14 h-14 bg-surface-container-highest border-2 border-outline-variant text-center text-headline-md font-bold rounded-xl focus:border-primary-container focus:ring-0 transition-colors text-on-surface outline-none"
-                      placeholder="0"
-                      type="number"
-                      min={0}
-                      max={9}
-                      onInput={(e) => { const t = e.target as HTMLInputElement; if (t.value.length > 1) t.value = t.value.slice(0,1) }}
-                    />
-                  </div>
-
-                  {/* Team 2 */}
-                  <div className="flex flex-col items-center gap-sm">
-                    <div className="w-12 h-8 rounded bg-blue-600 shadow-lg group-hover:scale-110 transition-transform" title="France" />
-                    <span className="font-headline-md text-body-md font-bold text-on-background">FRANCE</span>
-                  </div>
-                </div>
-
-                {/* Right — Predict Button */}
-                <div className="w-full md:w-auto">
-                  <button
-                    id="predict-match-2"
-                    onClick={() => handlePredict('match-2')}
-                    className={`w-full md:w-auto font-black px-6 py-3 rounded-lg active:scale-95 transition-all duration-300 uppercase font-label-caps text-label-caps tracking-widest cursor-pointer ${
-                      predicted['match-2']
-                        ? 'bg-secondary-fixed text-background'
-                        : 'bg-primary-container text-background glow-gold'
-                    }`}
-                  >
-                    {predicted['match-2'] ? 'SAVED!' : 'PREDICT'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
+              )
+            })}
           </div>
-        </section>
+        )}
 
-        {/* ═══ Section: My Predictions ═══ */}
-        <section className="py-xl px-gutter max-w-container-max mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-lg gap-md">
-            <h2 className="font-display-md text-display-md text-primary-container font-black uppercase tracking-widest">
+        {isAuthenticated && predictions.length > 0 && (
+          <section className="space-y-md">
+            <h2 className="font-display-md text-headline-lg text-primary-container font-black uppercase tracking-tight">
               My Predictions
             </h2>
-            <div className="bg-[#201f1f] border border-white/5 rounded-full px-4 py-1 flex items-center gap-md">
-              <div className="flex items-center gap-xs">
-                <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Global Rank</span>
-                <span className="font-headline-md text-body-md text-primary-container font-black">#1,245</span>
-              </div>
-              <div className="w-[1px] h-4 bg-white/10"></div>
-              <div className="flex items-center gap-xs">
-                <span className="font-label-caps text-label-caps text-on-surface-variant uppercase">Points</span>
-                <span className="font-headline-md text-body-md text-secondary-fixed font-black">450 pts</span>
-              </div>
+            <div className="glass-card rounded-2xl divide-y divide-outline-variant/20 overflow-hidden">
+              {predictions.map((p) => {
+                const m = matches.find((x) => x.id === p.match_id)
+                return (
+                  <div key={p.id} className="flex items-center justify-between px-md py-sm">
+                    <span className="font-body-md text-body-md text-on-surface truncate">
+                      {m ? `${m.home_team} vs ${m.away_team}` : 'Match'}
+                    </span>
+                    <div className="flex items-center gap-md shrink-0">
+                      <span className="font-stats-number text-stats-number text-on-background tabular-nums">
+                        {p.predicted_home}–{p.predicted_away}
+                      </span>
+                      {p.scored ? (
+                        <span className="badge-live">+{p.points} pts</span>
+                      ) : (
+                        <span className="badge-scheduled">Pending</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          </div>
+            <button onClick={() => refresh()} className="filter-chip">Refresh points</button>
+          </section>
+        )}
+      </div>
+    </SiteShell>
+  )
+}
 
-          <div className="grid grid-cols-1 gap-sm">
+function Header() {
+  return (
+    <div className="px-gutter max-w-container-max mx-auto pt-lg">
+      <h1 className="font-display-md text-display-md text-primary-container font-black uppercase tracking-tight">
+        Match Predictions
+      </h1>
+      <p className="font-body-lg text-body-lg text-on-surface-variant mt-xs">
+        Exact score = <span className="text-secondary-fixed font-bold">3 pts</span> · correct outcome ={' '}
+        <span className="text-secondary-fixed font-bold">1 pt</span>. Locked at kickoff.
+      </p>
+    </div>
+  )
+}
 
-            {/* Row 1 — Correct */}
-            <div className="glass-card rounded-lg p-3 flex items-center justify-between border-l-4 border-l-[#00FF87]">
-              <div className="flex items-center gap-md">
-                <div className="flex -space-x-2">
-                  <div className="w-6 h-4 rounded-sm bg-sky-400 ring-2 ring-background" title="Argentina" />
-                  <div className="w-6 h-4 rounded-sm bg-red-600 ring-2 ring-background" title="Spain" />
-                </div>
-                <div>
-                  <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider">Argentina vs Spain</p>
-                  <p className="font-stats-number text-on-surface text-sm">Pred: 2-1 | Result: 2-1</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-md">
-                <span className="bg-secondary-fixed/10 text-secondary-fixed px-md py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                  Correct
-                </span>
-                <span className="font-stats-number text-secondary-fixed font-black">+50</span>
-              </div>
-            </div>
+function TeamSide({
+  name,
+  crest,
+  alignRight = false,
+}: {
+  name: string
+  crest?: string | null
+  alignRight?: boolean
+}) {
+  return (
+    <div className={`flex items-center gap-sm min-w-0 flex-1 ${alignRight ? 'flex-row-reverse text-right' : ''}`}>
+      <TeamCrest name={name} crest={crest} size={40} />
+      <span className="font-headline-md text-body-md font-bold text-on-background truncate">{name}</span>
+    </div>
+  )
+}
 
-            {/* Row 2 — Incorrect */}
-            <div className="glass-card rounded-lg p-3 flex items-center justify-between border-l-4 border-l-red-400">
-              <div className="flex items-center gap-md">
-                <div className="flex -space-x-2">
-                  <div className="w-6 h-4 rounded-sm bg-gray-700 ring-2 ring-background" title="Germany" />
-                  <div className="w-6 h-4 rounded-sm bg-red-500 ring-2 ring-background" title="Japan" />
-                </div>
-                <div>
-                  <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider">Germany vs Japan</p>
-                  <p className="font-stats-number text-on-surface text-sm">Pred: 3-0 | Result: 1-1</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-md">
-                <span className="bg-red-400/10 text-red-400 px-md py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                  Incorrect
-                </span>
-                <span className="font-stats-number text-red-400 font-black">0</span>
-              </div>
-            </div>
+function ScoreInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <input
+      inputMode="numeric"
+      pattern="[0-9]*"
+      maxLength={2}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ''))}
+      className="w-12 h-12 text-center bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-background font-stats-number text-stats-number focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/30 transition-all"
+      placeholder="0"
+    />
+  )
+}
 
-            {/* Row 3 — Pending */}
-            <div className="glass-card rounded-lg p-3 flex items-center justify-between border-l-4 border-l-[#353534]">
-              <div className="flex items-center gap-md">
-                <div className="flex -space-x-2">
-                  <div className="w-6 h-4 rounded-sm bg-red-600 ring-2 ring-background" title="Canada" />
-                  <div className="w-6 h-4 rounded-sm bg-white ring-2 ring-background" title="England" />
-                </div>
-                <div>
-                  <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-wider">Canada vs England</p>
-                  <p className="font-stats-number text-on-surface text-sm">Pred: 0-2 | Live</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-md">
-                <span className="bg-surface-variant text-on-surface-variant px-md py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                  Pending
-                </span>
-                <span className="font-stats-number text-on-surface-variant font-black">--</span>
-              </div>
-            </div>
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="glass-card rounded-2xl p-lg h-44 animate-pulse" />
+      ))}
+    </div>
+  )
+}
 
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full py-xl bg-surface-container-lowest border-t border-outline-variant/50">
-        <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto space-y-md">
-          <div className="flex flex-col items-center md:items-start gap-xs">
-            <span className="font-headline-md text-headline-md text-primary-container font-black">WorldCupDNA</span>
-            <p className="font-body-md text-body-md text-on-tertiary-container">© 2026 WorldCupDNA. All Rights Reserved. One Dream, One World.</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-md">
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Terms of Service</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Fan Support</Link>
-            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="https://www.fifa.com" target="_blank" rel="noopener noreferrer">Official FIFA Site</Link>
-          </div>
-          <div className="flex gap-md">
-            <Link className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:border-primary-container hover:text-primary-container transition-all" href="#">
-              <span className="material-symbols-outlined">share</span>
-            </Link>
-            <Link className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:border-primary-container hover:text-primary-container transition-all" href="#">
-              <span className="material-symbols-outlined">public</span>
-            </Link>
-          </div>
-        </div>
-      </footer>
-
-      {/* Mobile Bottom Nav Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#131313]/95 backdrop-blur border-t border-white/10 flex items-center justify-around z-50">
-        <Link href="/matches" className="flex flex-col items-center gap-xs text-primary-container">
-          <span className="material-symbols-outlined text-[22px]">sports_soccer</span>
-          <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">Matches</span>
-        </Link>
-        <Link href="/leaderboard" className="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors">
-          <span className="material-symbols-outlined text-[22px]">analytics</span>
-          <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">Bracket</span>
-        </Link>
-        <Link href="/profile/build" className="flex flex-col items-center gap-xs text-on-surface-variant hover:text-primary transition-colors">
-          <span className="material-symbols-outlined text-[22px]">person</span>
-          <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">Fan ID</span>
-        </Link>
-      </nav>
+function EmptyState({ icon, title, body }: { icon: string; title: string; body: string }) {
+  return (
+    <div className="glass-card rounded-2xl p-xl text-center max-w-lg mx-auto space-y-sm">
+      <span className="material-symbols-outlined text-on-surface-variant text-[48px]">{icon}</span>
+      <h2 className="font-headline-lg text-headline-lg text-on-background">{title}</h2>
+      <p className="font-body-md text-body-md text-on-surface-variant">{body}</p>
     </div>
   )
 }
