@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const A = 'Anton, sans-serif'
-
 // Hardcoded mapping of NATION to football-data.org Team ID
 // These IDs correspond to teams in the API. 
 const NATION_TO_TEAM_ID: Record<string, number> = {
@@ -40,6 +38,7 @@ export default function ProfilePage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [username, setUsername] = useState<string>('FAN')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -50,6 +49,7 @@ export default function ProfilePage() {
 
     const savedNation = localStorage.getItem('selectedNation')
     const savedPlayer = localStorage.getItem('selectedPlayer')
+    const savedUsername = localStorage.getItem('username')
 
     if (!savedNation || !savedPlayer) {
       // If no team picked, redirect back to home
@@ -59,6 +59,9 @@ export default function ProfilePage() {
 
     setNation(savedNation)
     setStarPlayer(savedPlayer)
+    if (savedUsername) {
+      setUsername(savedUsername)
+    }
 
     const fetchMatches = async () => {
       try {
@@ -95,58 +98,164 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main style={{ minHeight: '100vh', backgroundColor: '#101415', color: '#e0e3e5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ fontFamily: A, fontSize: '32px', color: '#e6c364' }}>LOADING MATCHES...</div>
+      <main className="min-h-screen bg-background text-on-background flex justify-center items-center font-inter">
+        <div className="flex flex-col items-center gap-md">
+          <span className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></span>
+          <div className="font-display-md text-headline-md text-primary-container font-black tracking-widest uppercase mt-4">LOADING MATCHES...</div>
+        </div>
       </main>
     )
   }
 
   return (
-    <main style={{ minHeight: '100vh', backgroundColor: '#101415', color: '#e0e3e5' }}>
-      {/* NAVBAR */}
-      <nav style={{ position: 'fixed', top: 0, width: '100%', zIndex: 50, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 48px', height: '64px', backgroundColor: 'rgba(16,20,21,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <Link href="/" style={{ fontFamily: A, color: '#e6c364', fontSize: '20px', letterSpacing: '1px', textDecoration: 'none' }}>WORLDCUPDNA</Link>
-        <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-          <button onClick={handleChangeTeam} style={{ border: '1px solid #e6c364', background: 'transparent', color: '#e6c364', padding: '8px 20px', fontSize: '14px', cursor: 'pointer' }}>CHANGE TEAM</button>
+    <div className="flex flex-col min-h-screen pb-16 md:pb-0 bg-background text-on-background font-inter">
+      {/* TopNavBar */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+        <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
+          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
+            WorldCupDNA
+          </Link>
+          <nav className="hidden md:flex items-center space-x-lg">
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/">
+              Home
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/matches">
+              Matches
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/predictions">
+              Predictions
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/leaderboard">
+              Leaderboard
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/venues">
+              Watch Parties
+            </Link>
+          </nav>
+          <div className="flex items-center gap-md">
+            <div className="flex items-center gap-sm">
+              <span className="hidden sm:inline font-label-caps text-xs text-on-surface-variant uppercase tracking-wider">
+                👋 {username}
+              </span>
+              <button 
+                onClick={handleChangeTeam} 
+                className="bg-transparent text-primary-container border border-primary-container px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary-container hover:text-black transition-all font-montserrat"
+              >
+                Change Team
+              </button>
+            </div>
+          </div>
         </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="pt-[88px] flex-grow">
+        {/* Profile Header Hero */}
+        <section className="relative py-xl px-gutter max-w-container-max mx-auto text-center overflow-hidden border-b border-outline-variant/20">
+          <div className="absolute inset-0 bg-radial-gradient(circle, rgba(233,196,0,0.05) 0%, transparent 80%) pointer-events-none" />
+          <div className="max-w-2xl mx-auto space-y-sm relative z-10">
+            <div className="inline-flex items-center gap-sm bg-primary-container/10 border border-primary-container/20 px-md py-xs rounded-full text-primary-container font-label-caps text-xs tracking-widest uppercase">
+              Your Selected Team
+            </div>
+            <h1 className="font-display-lg text-display-lg text-on-background tracking-tighter leading-none uppercase">
+              {nation}
+            </h1>
+            <p className="font-headline-md text-headline-md text-on-surface-variant tracking-wide">
+              Star Player: <span className="text-white font-extrabold">{starPlayer}</span>
+            </p>
+          </div>
+        </section>
+
+        {/* Upcoming Matches Section */}
+        <section className="py-xl px-gutter max-w-[1000px] mx-auto space-y-lg">
+          <div className="flex items-center justify-between border-b border-outline-variant/30 pb-sm">
+            <h2 className="font-display-md text-headline-lg font-black tracking-tight text-white uppercase flex items-center gap-sm">
+              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>stadium</span>
+              Upcoming Matches
+            </h2>
+            <span className="font-label-caps text-xs text-on-surface-variant/70 uppercase">
+              Real-time API Data
+            </span>
+          </div>
+
+          {error ? (
+            <div className="bg-error-container/20 border border-error-container text-on-error-container p-md rounded-xl text-center font-body-md">
+              <span className="material-symbols-outlined block text-3xl mb-xs">error</span>
+              {error}
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="glass-card p-xl text-center text-on-surface-variant font-body-md">
+              <span className="material-symbols-outlined block text-4xl mb-xs text-on-surface-variant/40">event_busy</span>
+              No upcoming matches scheduled for {nation}.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-md">
+              {matches.map((match) => (
+                <div key={match.id} className="glass-card p-md md:p-lg relative overflow-hidden transition-all hover:border-outline-variant/60 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md">
+                  <div className="absolute top-0 left-0 w-[4px] h-full bg-primary-container"></div>
+                  
+                  <div className="space-y-xs">
+                    <span className="bg-surface-variant/40 text-primary-container border border-outline-variant/30 text-[10px] font-bold font-label-caps px-sm py-0.5 rounded-full uppercase tracking-wider">
+                      {match.competition?.name || 'Competition'}
+                    </span>
+                    <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-widest pt-xs">
+                      {match.utcDate ? new Date(match.utcDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-md justify-center flex-1 max-w-xl">
+                    <div className="font-display-md text-headline-md text-on-background font-black text-right flex-1 truncate">{match.homeTeam?.name || 'TBD'}</div>
+                    <div className="bg-surface-variant/50 border border-outline-variant/30 px-3 py-1.5 rounded-lg text-primary-container font-label-caps text-xs font-black font-semibold">VS</div>
+                    <div className="font-display-md text-headline-md text-on-background font-black text-left flex-1 truncate">{match.awayTeam?.name || 'TBD'}</div>
+                  </div>
+
+                  <div className="text-right flex flex-col items-end gap-xs min-w-[120px]">
+                    <span className="font-label-caps text-[12px] font-bold text-on-surface-variant bg-white/[0.02] border border-white/5 px-3 py-1 rounded">
+                      {match.utcDate ? new Date(match.utcDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'Time TBD'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full py-xl bg-surface-container-lowest border-t border-outline-variant/50 z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto space-y-md">
+          <div className="flex flex-col items-center md:items-start gap-xs">
+            <span className="font-headline-md text-headline-md text-primary-container font-black">WorldCupDNA</span>
+            <p className="font-body-md text-body-md text-on-tertiary-container">© 2026 WorldCupDNA. All Rights Reserved. One Dream, One World.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-md">
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Terms of Service</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Fan Support</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="https://www.fifa.com" target="_blank" rel="noopener noreferrer">Official FIFA Site</Link>
+          </div>
+        </div>
+      </footer>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 flex items-center justify-around z-50">
+        {[
+          { href: '/', icon: 'home', label: 'Home', active: false },
+          { href: '/matches', icon: 'sports_soccer', label: 'Matches', active: false },
+          { href: '/predictions', icon: 'analytics', label: 'Predict', active: false },
+          { href: '/leaderboard', icon: 'leaderboard', label: 'Ranks', active: false },
+          { href: '/venues', icon: 'location_on', label: 'Venues', active: false },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex flex-col items-center gap-xs transition-colors ${item.active ? 'text-primary-container' : 'text-on-surface-variant hover:text-primary'}`}
+          >
+            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+            <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">{item.label}</span>
+          </Link>
+        ))}
       </nav>
-
-      {/* HEADER SECTION */}
-      <section style={{ paddingTop: '120px', paddingBottom: '40px', textAlign: 'center', paddingLeft: '24px', paddingRight: '24px' }}>
-        <div style={{ color: '#e6c364', fontSize: '14px', letterSpacing: '4px', marginBottom: '8px' }}>YOUR SELECTED TEAM</div>
-        <h1 style={{ fontFamily: A, fontSize: 'clamp(40px,6vw,72px)', color: '#fff', marginBottom: '16px', lineHeight: 1 }}>{nation}</h1>
-        <p style={{ color: '#c6c6cc', fontSize: '18px', letterSpacing: '2px' }}>STAR PLAYER: <span style={{ color: '#fff' }}>{starPlayer}</span></p>
-      </section>
-
-      {/* UPCOMING MATCHES */}
-      <section style={{ padding: '40px 48px', maxWidth: '1200px', margin: '0 auto' }}>
-        <h2 style={{ fontFamily: A, fontSize: '32px', color: '#fff', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px' }}>UPCOMING MATCHES</h2>
-        
-        {error ? (
-          <div style={{ color: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.1)', padding: '24px', border: '1px solid rgba(255,107,107,0.2)', textAlign: 'center' }}>
-            {error}
-          </div>
-        ) : matches.length === 0 ? (
-          <div style={{ color: '#909096', textAlign: 'center', padding: '40px' }}>No upcoming matches scheduled.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {matches.map((match) => (
-              <div key={match.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#e6c364' }}></div>
-                <div style={{ color: '#e6c364', fontSize: '11px', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>{match.competition?.name || 'Competition'}</div>
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '24px', marginBottom: '12px' }}>
-                  <div style={{ fontFamily: A, fontSize: '24px', color: '#fff', flex: 1, textAlign: 'right' }}>{match.homeTeam?.name || 'TBD'}</div>
-                  <div style={{ color: '#e6c364', fontSize: '14px', fontWeight: 'bold', letterSpacing: '2px' }}>VS</div>
-                  <div style={{ fontFamily: A, fontSize: '24px', color: '#fff', flex: 1, textAlign: 'left' }}>{match.awayTeam?.name || 'TBD'}</div>
-                </div>
-                <div style={{ color: '#909096', fontSize: '13px', textAlign: 'center' }}>
-                  {match.utcDate ? new Date(match.utcDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Date TBD'}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </main>
+    </div>
   )
 }

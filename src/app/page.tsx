@@ -1,265 +1,280 @@
 'use client'
+
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { nationGradient } from '@/lib/nationColors'
 
-const PLAYERS = [
-  // CONCACAF (6)
-  { name: 'HIRVING LOZANO', nation: 'MEXICO', color: '#006847' },
-  { name: 'JOSE FAJARDO', nation: 'PANAMA', color: '#DA121A' },
-  { name: 'FRANTZDY PIERROT', nation: 'HAITI', color: '#00205B' },
-  { name: 'LEANDRO BACUNA', nation: 'CURAÇAO', color: '#002B7F' },
-  { name: 'ALPHONSO DAVIES', nation: 'CANADA', color: '#FF0000' },
-  { name: 'CHRISTIAN PULISIC', nation: 'USA', color: '#002868' },
-  // AFC (9)
-  { name: 'TAKUMI MINAMINO', nation: 'JAPAN', color: '#BC002D' },
-  { name: 'MEHDI TAREMI', nation: 'IRAN', color: '#239F40' },
-  { name: 'SON HEUNG-MIN', nation: 'SOUTH KOREA', color: '#CD2E3A' },
-  { name: 'MATHEW LECKIE', nation: 'AUSTRALIA', color: '#FFCD00' },
-  { name: 'AKRAM AFIF', nation: 'QATAR', color: '#8D1B3D' },
-  { name: 'SALEM AL-DAWSARI', nation: 'SAUDI ARABIA', color: '#006C35' },
-  { name: 'AYMEN HUSSEIN', nation: 'IRAQ', color: '#007A3D' },
-  { name: 'ELDOR SHOMURODOV', nation: 'UZBEKISTAN', color: '#1EB53A' },
-  { name: 'YAZAN AL-NAIMAT', nation: 'JORDAN', color: '#007A3D' },
-  // CAF (10)
-  { name: 'ACHRAF HAKIMI', nation: 'MOROCCO', color: '#c1272d' },
-  { name: 'SADIO MANE', nation: 'SENEGAL', color: '#00853F' },
-  { name: 'MOHAMED SALAH', nation: 'EGYPT', color: '#CE1126' },
-  { name: 'YASSINE MERIAH', nation: 'TUNISIA', color: '#E70013' },
-  { name: 'RIYAD MAHREZ', nation: 'ALGERIA', color: '#006233' },
-  { name: 'PERCY TAU', nation: 'SOUTH AFRICA', color: '#007749' },
-  { name: 'SEBASTIEN HALLER', nation: 'IVORY COAST', color: '#F77F00' },
-  { name: 'MOHAMMED KUDUS', nation: 'GHANA', color: '#006B3F' },
-  { name: 'CHANCEL MBEMBA', nation: 'DR CONGO', color: '#007FFF' },
-  { name: 'JULIO TAVARES', nation: 'CAPE VERDE', color: '#003893' },
-  // CONMEBOL (6)
-  { name: 'LIONEL MESSI', nation: 'ARGENTINA', color: '#74acdf' },
-  { name: 'VINICIUS JR', nation: 'BRAZIL', color: '#009c3b' },
-  { name: 'JAMES RODRIGUEZ', nation: 'COLOMBIA', color: '#FCD116' },
-  { name: 'ENNER VALENCIA', nation: 'ECUADOR', color: '#FFD100' },
-  { name: 'DARWIN NUNEZ', nation: 'URUGUAY', color: '#5EB6E4' },
-  { name: 'MIGUEL ALMIRON', nation: 'PARAGUAY', color: '#D52B1E' },
-  // OFC (1)
-  { name: 'CHRIS WOOD', nation: 'NEW ZEALAND', color: '#000000' },
-  // UEFA (16)
-  { name: 'KYLIAN MBAPPE', nation: 'FRANCE', color: '#002395' },
-  { name: 'LAMINE YAMAL', nation: 'SPAIN', color: '#c60b1e' },
-  { name: 'HARRY KANE', nation: 'ENGLAND', color: '#CF1B1B' },
-  { name: 'CRISTIANO RONALDO', nation: 'PORTUGAL', color: '#006600' },
-  { name: 'JAMAL MUSIALA', nation: 'GERMANY', color: '#000000' },
-  { name: 'VIRGIL VAN DIJK', nation: 'NETHERLANDS', color: '#FF6600' },
-  { name: 'KEVIN DE BRUYNE', nation: 'BELGIUM', color: '#EF3340' },
-  { name: 'LUKA MODRIC', nation: 'CROATIA', color: '#FF0000' },
-  { name: 'GRANIT XHAKA', nation: 'SWITZERLAND', color: '#FF0000' },
-  { name: 'MARCEL SABITZER', nation: 'AUSTRIA', color: '#ED2939' },
-  { name: 'ANDY ROBERTSON', nation: 'SCOTLAND', color: '#004B84' },
-  { name: 'ERLING HAALAND', nation: 'NORWAY', color: '#BA0C2F' },
-  { name: 'VIKTOR GYOKERES', nation: 'SWEDEN', color: '#FECC02' },
-  { name: 'HAKAN CALHANOGLU', nation: 'TURKEY', color: '#E30A17' },
-  { name: 'PATRIK SCHICK', nation: 'CZECHIA', color: '#D7141A' },
-  { name: 'EDIN DZEKO', nation: 'BOSNIA AND HERZEGOVINA', color: '#002F6C' }
+const FEATURED_PLAYERS = [
+  { name: 'LIONEL MESSI', nation: 'ARGENTINA' },
+  { name: 'KYLIAN MBAPPE', nation: 'FRANCE' },
+  { name: 'VINICIUS JR', nation: 'BRAZIL' },
+  { name: 'CHRISTIAN PULISIC', nation: 'USA' },
+  { name: 'SON HEUNG-MIN', nation: 'SOUTH KOREA' },
+  { name: 'MOHAMED SALAH', nation: 'EGYPT' },
 ]
-
-const FEATURES = [
-  { icon: 'fingerprint', title: 'FAN DNA PROFILE', desc: 'Build your tactical identity and get a unique badge.', link: '/profile/build' },
-  { icon: 'track_changes', title: 'MATCH PREDICTIONS', desc: 'Pick scores, earn points, win status.', link: '/matches' },
-  { icon: 'leaderboard', title: 'LIVE LEADERBOARD', desc: 'Climb global rankings after every match.', link: '/leaderboard' },
-  { icon: 'location_on', title: 'WATCH PARTIES', desc: 'Find venues near you worldwide.', link: '/venues' },
-]
-
-const A = 'Anton, sans-serif'
 
 export default function Home() {
-  const [countdown, setCountdown] = useState('LOADING...')
-  const [playerImages, setPlayerImages] = useState<Record<string, string>>({})
-  const [search, setSearch] = useState('')
-  const [isMobile, setIsMobile] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  const handlePickTeam = (nation: string, name: string) => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/auth?redirect=/profile')
-    } else {
-      localStorage.setItem('selectedNation', nation)
-      localStorage.setItem('selectedPlayer', name)
-      router.push('/profile')
-    }
-  }
+  const [countdown, setCountdown] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' })
 
   useEffect(() => {
     const target = new Date('2026-06-11T00:00:00')
-    const timer = setInterval(() => {
-      const now = new Date()
-      const diff = target.getTime() - now.getTime()
-      if (diff <= 0) { setCountdown('LIVE NOW!'); return }
-      const d = Math.floor(diff / 86400000)
-      const h = Math.floor((diff % 86400000) / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      setCountdown(`${String(d).padStart(2,'0')} DAYS ${String(h).padStart(2,'0')} HRS ${String(m).padStart(2,'0')} MINS`)
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    const fetchImages = async () => {
-      for (const p of PLAYERS) {
-        const playerName = p.name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-
-        try {
-          console.log('Fetching image for:', playerName)
-          const res = await fetch(`https://worldcupdna-backend.onrender.com/api/v1/players/photo/${encodeURIComponent(playerName)}`)
-          if (res.ok) {
-            const data = await res.json()
-            if (data.photo) {
-              setPlayerImages(prev => ({ ...prev, [p.nation]: data.photo }))
-            }
-          }
-        } catch (err) {
-          // silently skip
-        }
+    const tick = () => {
+      const diff = target.getTime() - Date.now()
+      if (diff <= 0) {
+        setCountdown({ days: '00', hours: '00', minutes: '00', seconds: '00' })
+        return
       }
-    }
-    fetchImages()
-  }, [])
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
-  const filteredPlayers = PLAYERS.filter(p =>
-    p.nation.toLowerCase().includes(search.toLowerCase()) ||
-    p.name.toLowerCase().includes(search.toLowerCase())
-  )
+      setCountdown({
+        days: String(days).padStart(2, '0'),
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0'),
+      })
+    }
+
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <main style={{minHeight:'100vh', backgroundColor:'#101415', color:'#e0e3e5', overflowX:'hidden'}}>
-
-      {/* NAVBAR */}
-      <nav style={{position:'fixed', top:0, width:'100%', zIndex:50, display:'flex', justifyContent:'space-between', alignItems:'center', padding: isMobile ? '0 16px' : '0 48px', height:'52px', backgroundColor:'rgba(16,20,21,0.85)', backdropFilter:'blur(20px)', borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
-        <div style={{fontFamily:A, color:'#f5d678', fontSize: isMobile ? '16px' : '20px', letterSpacing:'1px'}}>WORLDCUPDNA</div>
-        <div style={{display:'flex', gap: isMobile ? '12px' : '32px', alignItems:'center'}}>
-          {!isMobile && <Link href="/matches" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Matches</Link>}
-          {!isMobile && <Link href="/leaderboard" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Leaderboard</Link>}
-          {!isMobile && <Link href="/venues" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Watch Parties</Link>}
-          <Link href="/auth" style={{border:'1px solid #e6c364', color:'#e6c364', padding: isMobile ? '6px 14px' : '8px 20px', textDecoration:'none', fontSize: isMobile ? '12px' : '14px'}}>LOGIN</Link>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section style={{position:'relative', height: isMobile ? '100svh' : '100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-end', paddingBottom: isMobile ? '24px' : '40px', textAlign:'center', padding: isMobile ? '0 16px' : '0 24px', overflow:'hidden'}}>
-        <div style={{position:'absolute', inset:0, zIndex:0}}>
-          <img alt="Stadium" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.3, objectPosition:'center 20%'}} src="/wc2026-poster-enhanced.webp" />
-        </div>
-        <div style={{position:'relative', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:'900px'}}>
-
-          <h1 style={{fontFamily:A, fontSize: isMobile ? 'clamp(26px,9vw,36px)' : 'clamp(40px,7vw,80px)', color:'#e6c364', marginBottom:'16px', lineHeight:1, textShadow:'2px 2px 20px rgba(0,0,0,0.9)'}}>DISCOVER YOUR FOOTBALL DNA</h1>
-          <p style={{color:'#C1440E', fontSize: isMobile ? '13px' : '22px', marginBottom:'24px', letterSpacing: isMobile ? '1px' : '3px', opacity:1, fontWeight:900}}><strong style={{fontWeight:900, letterSpacing:'3px'}}>48 NATIONS. 104 MATCHES. ONE TROPHY.</strong></p>
-          <div style={{marginBottom:'32px', padding: isMobile ? '10px 14px' : '16px 24px', border:'1px solid rgba(230,195,100,0.5)', backgroundColor:'rgba(0,0,0,0.6)'}}>
-            <div style={{color:'#e6c364', fontSize:'13px', letterSpacing:'4px', marginBottom:'4px', fontWeight:900}}>TOURNAMENT COUNTDOWN</div>
-            <div style={{color:'#ffffff', fontSize: isMobile ? '13px' : '20px', letterSpacing:'3px', fontWeight:900}}>{countdown}</div>
-          </div>
-          <div style={{display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'16px', flexWrap:'wrap', justifyContent:'center', width: isMobile ? '100%' : 'auto'}}>
-            <Link href="/profile/build" style={{fontFamily:A, backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>BUILD MY DNA</Link>
-            <Link href="/matches" style={{fontFamily:A, border:'2px solid #1a6fe8', color:'#1a6fe8', padding: isMobile ? '14px 24px' : '16px 40px', fontSize: isMobile ? '16px' : '18px', textDecoration:'none', display:'block', textAlign:'center'}}>VIEW MATCHES</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* STATS BAR */}
-      <section style={{backgroundColor:'#191c1e', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)', padding: isMobile ? '24px 16px' : '32px 48px'}}>
-        <div style={{maxWidth:'1000px', margin:'0 auto', display:'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '24px' : '32px', justifyItems:'center'}}>
-          {[['48','TEAMS'],['104','MATCHES'],['16','CITIES'],['5B+','FANS']].map(([val, label]) => (
-            <div key={label} style={{textAlign:'center'}}>
-              <div style={{fontFamily:A, fontSize: isMobile ? '28px' : '40px', color:'#e6c364'}}>{val}</div>
-              <div style={{fontSize: isMobile ? '10px' : '12px', letterSpacing:'3px', color:'#e0e3e5', marginTop:'4px'}}>{label}</div>
+    <div className="flex flex-col min-h-screen pb-16 md:pb-0 bg-background text-on-background">
+      {/* TopNavBar */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+        <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
+          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
+            WorldCupDNA
+          </Link>
+          <nav className="hidden md:flex items-center space-x-lg">
+            <Link className="font-headline-md text-primary-container border-b-2 border-primary-container pb-1 font-bold" href="/">
+              Home
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/matches">
+              Matches
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/predictions">
+              Predictions
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/leaderboard">
+              Leaderboard
+            </Link>
+            <Link className="font-headline-md text-on-surface-variant hover:text-primary transition-colors" href="/venues">
+              Watch Parties
+            </Link>
+          </nav>
+          <div className="flex items-center gap-md">
+            <div className="hidden lg:flex items-center bg-surface-variant/30 px-md py-xs rounded-full border border-outline-variant/30">
+              <span className="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+              <input className="bg-transparent border-none focus:ring-0 text-body-md placeholder:text-on-surface-variant/50 w-32 outline-none text-on-surface" placeholder="Search matches..." type="text"/>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* PLAYER LEGENDS */}
-      <section style={{padding: isMobile ? '40px 0' : '80px 0'}}>
-        <div style={{padding: isMobile ? '0 16px' : '0 48px', marginBottom:'40px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', gap: isMobile ? '16px' : '0'}}>
-          <div>
-            <div style={{color:'#f5d678', fontSize:'11px', letterSpacing:'6px', textTransform:'uppercase'}}>Choose Your Allegiance</div>
-            <h2 style={{fontFamily:A, fontSize: isMobile ? 'clamp(28px,7vw,40px)' : 'clamp(32px,5vw,56px)', color:'#fff', marginTop:'8px'}}>THE ICONS</h2>
+            <div className="flex items-center gap-sm">
+              <button className="p-xs text-on-surface-variant hover:bg-surface-variant/20 rounded-full transition-all duration-300 cursor-pointer">
+                <span className="material-symbols-outlined">notifications</span>
+              </button>
+              <button className="p-xs text-on-surface-variant hover:bg-surface-variant/20 rounded-full transition-all duration-300 cursor-pointer">
+                <span className="material-symbols-outlined">person</span>
+              </button>
+            </div>
+            <Link href="/auth" className="hidden sm:block bg-primary-container text-on-primary-fixed px-md py-sm font-label-caps text-label-caps rounded-lg uppercase tracking-widest font-bold hover:bg-primary-fixed transition-all duration-300 active:scale-95 glow-gold text-center">
+              Join the Game
+            </Link>
           </div>
-          <input
-            type="text"
-            placeholder="SEARCH TEAMS / PLAYERS..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '10px 16px', fontSize: isMobile ? '11px' : '13px', letterSpacing: '1px', outline: 'none', width: isMobile ? '100%' : '280px', boxSizing: 'border-box'}}
-          />
         </div>
-        <div style={{display:'flex', overflowX:'auto', gap: isMobile ? '16px' : '24px', padding: isMobile ? '0 16px 32px' : '0 48px 32px', scrollbarWidth:'none', touchAction:'pan-x', WebkitOverflowScrolling:'touch'}}>
-          {filteredPlayers.map((p) => (
-            <div key={p.nation} style={{position:'relative', flexShrink:0, width: isMobile ? '160px' : '280px', height: isMobile ? '260px' : '420px', borderTop:`2px solid ${p.color}`, cursor:'pointer', overflow:'hidden'}}>
-              {playerImages[p.nation] && (
-                <img src={playerImages[p.nation]} alt={p.name} style={{position:'absolute', width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center', opacity:1}} />
-              )}
-              <div style={{position:'absolute', inset:0, background:`linear-gradient(to bottom, ${p.color}99, #080d1a)`, display:'flex', alignItems:'center', justifyContent:'center'}}>
-                <div style={{fontFamily:'Anton, sans-serif', fontSize:'70px', color:p.color, opacity:0.4, letterSpacing:'-4px'}}>{p.nation.slice(0,3)}</div>
+      </header>
+
+      <main className="pt-[88px]">
+        {/* Hero Section */}
+        <section className="relative w-full h-[85vh] min-h-[600px] flex items-center overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            {/* IMAGE: use local /images/heroes/hero-stadium.jpg as img tag, not CSS */}
+            <img alt="World Cup Stadium Energy" className="w-full h-full object-cover" src="/images/heroes/hero-stadium.jpg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+          </div>
+          <div className="relative z-10 px-gutter max-w-container-max mx-auto w-full">
+            <div className="max-w-2xl space-y-md">
+              <div className="inline-flex items-center gap-sm bg-secondary-container/10 border border-secondary-container/20 px-md py-xs rounded-full text-secondary-fixed font-label-caps text-label-caps">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-fixed opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary-fixed"></span>
+                </span>
+                2026 ROADMAP LIVE
               </div>
-              <div style={{position:'absolute', inset:0, background:'linear-gradient(to top, #101415 75%, rgba(16,20,21,1) 85%, rgba(16,20,21,0.95) 92%, transparent 100%)'}} />
-              <div className="group" style={{position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'flex-end', padding:'20px'}}>
-                <div style={{color:'#f5d678', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', marginBottom:'4px'}}>{p.nation}</div>
-                <div style={{fontFamily:'Anton, sans-serif', color:'#fff', fontSize: isMobile ? '15px' : '18px', marginBottom:'8px'}}>{p.name}</div>
-                <button onClick={() => handlePickTeam(p.nation, p.name)} style={{width:'100%', backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '6px' : '8px', fontSize: isMobile ? '10px' : '11px', letterSpacing:'2px', border:'none', cursor:'pointer'}}>PICK THIS TEAM</button>
+              <h1 className="font-display-lg text-display-lg text-on-background leading-tight">
+                {"What's Your"} <br/><span className="text-primary-container">Football DNA?</span>
+              </h1>
+              <p className="font-headline-md text-headline-md text-primary-container font-bold opacity-90">
+                Build your fan profile. Predict matches. Rule the leaderboard.
+              </p>
+              <div className="flex flex-wrap gap-md pt-base">
+                <Link href="/profile/build" className="bg-primary-container text-on-primary-fixed px-lg py-md rounded-lg font-headline-md text-headline-md font-extrabold glow-gold transition-all duration-300 active:scale-95 text-center">
+                  Build My DNA
+                </Link>
+                <button className="glass-card text-on-background px-lg py-md rounded-lg font-headline-md text-headline-md font-bold hover:bg-white/10 transition-all duration-300 cursor-pointer">
+                  Watch Trailer
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FEATURES GRID */}
-      <section style={{padding: isMobile ? '40px 16px' : '80px 48px', backgroundColor:'#0b0f10'}}>
-        <div style={{maxWidth:'1200px', margin:'0 auto'}}>
-          <div style={{textAlign:'center', marginBottom: isMobile ? '32px' : '56px'}}>
-            <h2 style={{fontFamily:A, fontSize:'clamp(32px,5vw,56px)', color:'#fff'}}>UNLEASH THE EXPERIENCE</h2>
-            <p style={{color:'#c6c6cc', marginTop:'12px'}}>Built for the biggest World Cup ever.</p>
           </div>
-          <div style={{display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap:'24px'}}>
-            {FEATURES.map(f => (
-              <Link href={f.link} key={f.title} style={{display:'flex', gap:'24px', alignItems:'flex-start', padding: isMobile ? '20px' : '32px', backgroundColor:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.08)', textDecoration:'none'}}>
-                <div style={{backgroundColor:'rgba(230,195,100,0.1)', padding: isMobile ? '12px' : '16px', border:'1px solid rgba(230,195,100,0.2)', flexShrink:0}}>
-                  <span className="material-symbols-outlined" style={{color:'#f5d678', fontSize:'32px'}}>{f.icon}</span>
+        </section>
+
+        {/* Feature Cards */}
+        <section className="py-xl px-gutter max-w-container-max mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            <Link href="/profile/build" className="glass-card group p-lg rounded-xl flex flex-col gap-md transition-all duration-500 hover:-translate-y-2 glow-green">
+              <div className="w-14 h-14 rounded-lg bg-secondary-container/10 border border-secondary-container/30 flex items-center justify-center text-secondary-fixed">
+                <span className="material-symbols-outlined text-[32px]">dns</span>
+              </div>
+              <h3 className="font-headline-lg text-headline-lg text-on-background">Fan DNA Profile</h3>
+              <p className="font-body-lg text-body-lg text-on-surface-variant">Create your unique fan identity, track your stats across every tournament, and earn legendary badges.</p>
+              <div className="mt-auto pt-md flex items-center text-secondary-fixed font-bold font-label-caps group-hover:gap-sm transition-all">
+                EXPLORE GENOME <span className="material-symbols-outlined">chevron_right</span>
+              </div>
+            </Link>
+            <Link href="/predictions" className="glass-card group p-lg rounded-xl flex flex-col gap-md transition-all duration-500 hover:-translate-y-2 glow-green">
+              <div className="w-14 h-14 rounded-lg bg-secondary-container/10 border border-secondary-container/30 flex items-center justify-center text-secondary-fixed">
+                <span className="material-symbols-outlined text-[32px]">sports_soccer</span>
+              </div>
+              <h3 className="font-headline-lg text-headline-lg text-on-background">Match Predictions</h3>
+              <p className="font-body-lg text-body-lg text-on-surface-variant">Put your football IQ to the test. Predict outcomes, scores, and scorers to climb the global ranks.</p>
+              <div className="mt-auto pt-md flex items-center text-secondary-fixed font-bold font-label-caps group-hover:gap-sm transition-all">
+                MAKE PICKS <span className="material-symbols-outlined">chevron_right</span>
+              </div>
+            </Link>
+            <Link href="/venues" className="glass-card group p-lg rounded-xl flex flex-col gap-md transition-all duration-500 hover:-translate-y-2 glow-green">
+              <div className="w-14 h-14 rounded-lg bg-secondary-container/10 border border-secondary-container/30 flex items-center justify-center text-secondary-fixed">
+                <span className="material-symbols-outlined text-[32px]">location_on</span>
+              </div>
+              <h3 className="font-headline-lg text-headline-lg text-on-background">Watch Party Finder</h3>
+              <p className="font-body-lg text-body-lg text-on-surface-variant">Join the roar of the crowd. Find official fan zones and local parties in every host city.</p>
+              <div className="mt-auto pt-md flex items-center text-secondary-fixed font-bold font-label-caps group-hover:gap-sm transition-all">
+                FIND A ZONE <span className="material-symbols-outlined">chevron_right</span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* Star Players Section */}
+        <section className="py-xl px-gutter max-w-container-max mx-auto space-y-lg">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-md">
+            <div className="space-y-sm">
+              <h2 className="font-display-md text-display-md text-primary-container font-black uppercase tracking-tight">Star Players</h2>
+              <p className="font-body-lg text-body-lg text-on-surface-variant">The faces of World Cup 2026</p>
+            </div>
+            <Link href="/profile/build" className="font-label-caps text-label-caps font-bold uppercase tracking-wider text-primary-container hover:underline">
+              Pick Your Nation &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-md">
+            {FEATURED_PLAYERS.map((player) => (
+              <div key={player.name} className="glass-card overflow-hidden group hover:scale-[1.02] transition-all duration-300">
+                <div
+                  className="h-28 w-full"
+                  style={{ background: nationGradient(player.nation) }}
+                />
+                <div className="p-sm">
+                  <p className="font-headline-md text-body-md font-black uppercase tracking-tight text-on-background truncate">{player.name}</p>
+                  <p className="font-label-caps text-[10px] text-on-surface-variant mt-xs truncate">{player.nation}</p>
                 </div>
-                <div>
-                  <h3 style={{fontFamily:A, color:'#fff', fontSize: isMobile ? '16px' : '20px', marginBottom:'8px'}}>{f.title}</h3>
-                  <p style={{color:'#c6c6cc', fontSize: isMobile ? '13px' : '14px', lineHeight:1.6}}>{f.desc}</p>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA BANNER */}
-      <section style={{padding: isMobile ? '32px 16px' : '80px 48px'}}>
-        <div style={{maxWidth:'1000px', margin:'0 auto', background:'linear-gradient(to right, #93000a, #080d1a)', padding: isMobile ? '24px 20px' : '80px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'flex-start' : 'center', flexWrap:'wrap', gap:'32px'}}>
-          <div>
-            <div style={{display:'inline-block', backgroundColor:'#fff', color:'#000', fontSize:'11px', padding:'4px 12px', marginBottom:'16px', letterSpacing:'2px'}}>LIVE ACCESS</div>
-            <h2 style={{fontFamily:A, fontSize: isMobile ? 'clamp(22px,6vw,36px)' : 'clamp(28px,4vw,48px)', color:'#fff', marginBottom:'12px'}}>TOURNAMENT KICKS OFF JUNE 11</h2>
-            <p style={{color:'rgba(224,227,229,0.8)', fontSize: isMobile ? '15px' : '18px'}}>Don't just watch history. Be part of it.</p>
+        {/* Countdown Section */}
+        <section className="relative py-xl bg-surface-container-lowest overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="grid grid-cols-8 h-full">
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+              <div className="border-r border-outline-variant/30"></div>
+            </div>
           </div>
-          <Link href="/profile/build" style={{fontFamily:A, backgroundColor:'#e6c364', color:'#000', padding: isMobile ? '16px 24px' : '20px 40px', fontSize: isMobile ? '16px' : '20px', textDecoration:'none', whiteSpace:'nowrap', textAlign:'center', width: isMobile ? '100%' : 'auto', boxSizing:'border-box'}}>BUILD YOUR PROFILE NOW</Link>
-        </div>
-      </section>
+          <div className="relative z-10 px-gutter max-w-container-max mx-auto text-center space-y-lg">
+            <div className="space-y-sm">
+              <h2 className="font-display-md text-display-md text-primary-container">Tournament kicks off June 11</h2>
+              <p className="font-body-lg text-body-lg text-on-surface-variant">The 2026 World Cup awaits. Are you ready?</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-md md:gap-xl max-w-3xl mx-auto">
+              <div className="flex flex-col items-center">
+                <span className="font-display-md text-display-lg text-on-background font-black tabular-nums" id="days">{countdown.days}</span>
+                <span className="font-label-caps text-label-caps text-on-tertiary-container uppercase">Days</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="font-display-md text-display-lg text-on-background font-black tabular-nums" id="hours">{countdown.hours}</span>
+                <span className="font-label-caps text-label-caps text-on-tertiary-container uppercase">Hours</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="font-display-md text-display-lg text-on-background font-black tabular-nums" id="minutes">{countdown.minutes}</span>
+                <span className="font-label-caps text-label-caps text-on-tertiary-container uppercase">Minutes</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="font-display-md text-display-lg text-primary-container font-black tabular-nums" id="seconds">{countdown.seconds}</span>
+                <span className="font-label-caps text-label-caps text-on-tertiary-container uppercase">Seconds</span>
+              </div>
+            </div>
+            <div className="pt-lg">
+              <button className="bg-secondary-fixed text-on-secondary px-lg py-md rounded-full font-label-caps text-label-caps font-black tracking-widest uppercase hover:bg-secondary-container transition-all cursor-pointer">
+                Download Tournament Schedule
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
 
-      {/* FOOTER */}
-      <footer style={{backgroundColor:'#323537', borderTop:'1px solid rgba(255,255,255,0.1)', padding: isMobile ? '32px 16px' : '48px', display:'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent:'space-between', alignItems: isMobile ? 'center' : 'center', textAlign: isMobile ? 'center' : 'left', flexWrap:'wrap', gap:'24px'}}>
-        <div>
-          <div style={{fontFamily:A, color:'#f5d678', fontSize: isMobile ? '16px' : '20px', marginBottom:'8px'}}>WORLDCUPDNA</div>
-          <p style={{color:'#c6c6cc', fontSize:'14px'}}>The ultimate fan platform for FIFA World Cup 2026.</p>
+      {/* Footer */}
+      <footer className="w-full py-xl bg-surface-container-lowest border-t border-outline-variant/50">
+        <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto space-y-md">
+          <div className="flex flex-col items-center md:items-start gap-xs">
+            <span className="font-headline-md text-headline-md text-primary-container font-black">WorldCupDNA</span>
+            <p className="font-body-md text-body-md text-on-tertiary-container">© 2026 WorldCupDNA. All Rights Reserved. One Dream, One World.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-md">
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Terms of Service</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="#">Fan Support</Link>
+            <Link className="font-body-md text-body-md text-on-tertiary-container hover:text-secondary-fixed transition-colors" href="https://www.fifa.com" target="_blank" rel="noopener noreferrer">Official FIFA Site</Link>
+          </div>
+          <div className="flex gap-md">
+            <Link className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:border-primary-container hover:text-primary-container transition-all" href="#">
+              <span className="material-symbols-outlined">share</span>
+            </Link>
+            <Link className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:border-primary-container hover:text-primary-container transition-all" href="#">
+              <span className="material-symbols-outlined">public</span>
+            </Link>
+          </div>
         </div>
-        <div style={{color:'#909096', fontSize: isMobile ? '11px' : '12px'}}>© 2026 WORLDCUPDNA. ALL RIGHTS RESERVED.</div>
       </footer>
 
-    </main>
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 flex items-center justify-around z-50">
+        {[
+          { href: '/', icon: 'home', label: 'Home', active: true },
+          { href: '/matches', icon: 'sports_soccer', label: 'Matches', active: false },
+          { href: '/predictions', icon: 'analytics', label: 'Predict', active: false },
+          { href: '/leaderboard', icon: 'leaderboard', label: 'Ranks', active: false },
+          { href: '/venues', icon: 'location_on', label: 'Venues', active: false },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex flex-col items-center gap-xs transition-colors ${item.active ? 'text-primary-container' : 'text-on-surface-variant hover:text-primary'}`}
+          >
+            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+            <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
   )
 }

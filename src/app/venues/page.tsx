@@ -1,191 +1,271 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { Venue } from '@/types'
 
-const A = 'Anton, sans-serif'
+const NAV_LINKS = [
+  { href: '/', label: 'Home' },
+  { href: '/matches', label: 'Matches' },
+  { href: '/predictions', label: 'Predictions' },
+  { href: '/leaderboard', label: 'Leaderboard' },
+  { href: '/venues', label: 'Watch Parties' },
+]
 
-const FILTERS = ['ALL', 'NAIROBI', 'MOMBASA', 'LAGOS', 'LONDON']
+const FILTER_CHIPS = ['All', 'Verified', 'Community', 'Outdoor', 'Indoor'] as const
+type FilterChip = (typeof FILTER_CHIPS)[number]
 
 export default function VenuesPage() {
-  const [venues, setVenues] = useState<any[]>([])
+  const [venues, setVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [activeFilter, setActiveFilter] = useState('ALL')
-  const [isMobile, setIsMobile] = useState(false)
-  const [countdown, setCountdown] = useState('LOADING...')
+  const [activeChip, setActiveChip] = useState<FilterChip>('All')
+  const [activeVenue, setActiveVenue] = useState<string | null>(null)
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  useEffect(() => {
-    const target = new Date('2026-06-11T00:00:00')
-    const timer = setInterval(() => {
-      const now = new Date()
-      const diff = target.getTime() - now.getTime()
-      if (diff <= 0) { setCountdown('LIVE NOW!'); return }
-      const d = Math.floor(diff / 86400000)
-      const h = Math.floor((diff % 86400000) / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      setCountdown(`${String(d).padStart(2,'0')}D ${String(h).padStart(2,'0')}H ${String(m).padStart(2,'0')}M TO KICKOFF`)
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    const fetchVenues = async () => {
-      try {
-        const res = await fetch('https://worldcupdna-backend.onrender.com/api/v1/venues/')
-        if (res.ok) {
-          const data = await res.json()
-          setVenues(data.venues || [])
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
+    fetch('https://worldcupdna-backend.onrender.com/api/v1/venues/')
+      .then((res) => res.json())
+      .then((data) => {
+        setVenues(Array.isArray(data) ? data : data.results ?? [])
         setLoading(false)
-      }
-    }
-    fetchVenues()
+      })
+      .catch(() => {
+        setError('Failed to load venues. Please try again.')
+        setLoading(false)
+      })
   }, [])
 
-  const filteredVenues = venues.filter(v => {
-    const matchesSearch = (v.name?.toLowerCase() || '').includes(search.toLowerCase()) || 
-                          (v.city?.toLowerCase() || '').includes(search.toLowerCase()) || 
-                          (v.country?.toLowerCase() || '').includes(search.toLowerCase())
-    
-    if (activeFilter !== 'ALL') {
-      return matchesSearch && v.city?.toUpperCase() === activeFilter
+  const filtered = useMemo(() => {
+    let list = venues
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (v) =>
+          v.name.toLowerCase().includes(q) ||
+          v.address?.toLowerCase().includes(q) ||
+          v.area?.toLowerCase().includes(q)
+      )
     }
-    return matchesSearch
-  })
+    if (activeChip === 'Verified') list = list.filter((v) => v.verified)
+    if (activeChip === 'Community') list = list.filter((v) => !v.verified)
+    return list
+  }, [venues, search, activeChip])
 
   return (
-    <main style={{minHeight:'100vh', backgroundColor:'#101415', color:'#e0e3e5', overflowX:'hidden'}}>
-      {/* NAVBAR */}
-      <nav style={{position:'fixed', top:0, width:'100%', zIndex:50, display:'flex', justifyContent:'space-between', alignItems:'center', padding: isMobile ? '0 16px' : '0 48px', height:'52px', backgroundColor:'rgba(16,20,21,0.85)', backdropFilter:'blur(20px)', borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
-        <div style={{fontFamily:A, color:'#e6c364', fontSize: isMobile ? '16px' : '20px', letterSpacing:'1px'}}>WORLDCUPDNA</div>
-        <div style={{display:'flex', gap: isMobile ? '12px' : '32px', alignItems:'center'}}>
-          {!isMobile && <Link href="/matches" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Matches</Link>}
-          {!isMobile && <Link href="/leaderboard" style={{color:'#c6c6cc', textDecoration:'none', fontSize:'14px'}}>Leaderboard</Link>}
-          {!isMobile && <Link href="/venues" style={{color:'#e6c364', textDecoration:'none', fontSize:'14px'}}>Watch Parties</Link>}
-          <Link href="/auth" style={{border:'1px solid #e6c364', color:'#e6c364', padding: isMobile ? '6px 14px' : '8px 20px', textDecoration:'none', fontSize: isMobile ? '12px' : '14px'}}>LOGIN</Link>
-        </div>
-      </nav>
-
-      {/* COUNTDOWN BANNER */}
-      <div style={{marginTop: '52px', backgroundColor: '#e6c364', padding: '12px', textAlign: 'center', color: '#000', fontFamily: A, fontSize: '18px', letterSpacing: '2px'}}>
-        NEXT MATCH: {countdown}
-      </div>
-
-      {/* HEADER & SEARCH */}
-      <section style={{padding: isMobile ? '40px 16px' : '64px 48px', textAlign: 'center'}}>
-        <h1 style={{fontFamily: A, fontSize: isMobile ? 'clamp(32px, 8vw, 48px)' : '64px', color: '#fff', marginBottom: '16px'}}>WATCH PARTY FINDER</h1>
-        <p style={{color: '#c6c6cc', fontSize: '16px', marginBottom: '32px'}}>Find verified venues to experience the tournament together.</p>
-        
-        <input 
-          type="text" 
-          placeholder="Search venues by city or country..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: '100%', 
-            maxWidth: '600px', 
-            padding: '16px 24px', 
-            backgroundColor: 'rgba(255,255,255,0.05)', 
-            border: '1px solid rgba(255,255,255,0.1)', 
-            color: '#fff', 
-            fontSize: '16px', 
-            borderRadius: '30px', 
-            outline: 'none',
-            marginBottom: '24px'
-          }}
-        />
-
-        {/* FILTER CHIPS */}
-        <div style={{display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap'}}>
-          {FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              style={{
-                backgroundColor: activeFilter === f ? '#e6c364' : 'rgba(255,255,255,0.05)',
-                color: activeFilter === f ? '#000' : '#e0e3e5',
-                border: activeFilter === f ? '1px solid #e6c364' : '1px solid rgba(255,255,255,0.1)',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                letterSpacing: '1px',
-                cursor: 'pointer'
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* VENUE GRID */}
-      <section style={{padding: isMobile ? '0 16px 64px' : '0 48px 80px', maxWidth: '1200px', margin: '0 auto'}}>
-        {loading ? (
-          <div style={{textAlign: 'center', color: '#e6c364', fontFamily: A, fontSize: '24px'}}>LOADING VENUES...</div>
-        ) : filteredVenues.length === 0 ? (
-          <div style={{textAlign: 'center', color: '#c6c6cc', padding: '64px 0'}}>
-            <div style={{fontSize: '48px', marginBottom: '16px'}}>🏟️</div>
-            <div style={{fontSize: '20px', color: '#fff', marginBottom: '8px'}}>No venues found</div>
-            <div style={{color: '#909096'}}>Try adjusting your search or filters.</div>
-          </div>
-        ) : (
-          <div style={{display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px'}}>
-            {filteredVenues.map(v => (
-              <div key={v.id} style={{backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
-                  <h2 style={{fontFamily: A, fontSize: '24px', color: '#fff', margin: 0}}>{v.name}</h2>
-                  {v.verified && (
-                    <span style={{backgroundColor: 'rgba(35,159,64,0.1)', color: '#239F40', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px'}}>VERIFIED</span>
-                  )}
-                </div>
-                <div style={{color: '#e6c364', fontSize: '14px', marginBottom: '8px'}}>★ ★ ★ ★ ★</div>
-                <div style={{color: '#909096', fontSize: '14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <span>📍</span> {v.city}, {v.country}
-                </div>
-                <p style={{color: '#c6c6cc', fontSize: '14px', lineHeight: 1.6, flexGrow: 1, marginBottom: '24px'}}>
-                  {v.description || 'Join local fans to watch the biggest matches on the big screen!'}
-                </p>
-                <a 
-                  href={`https://maps.google.com/?q=${encodeURIComponent(v.name + ' ' + v.city)}`} 
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'block', 
-                    textAlign: 'center', 
-                    backgroundColor: '#0052cc', 
-                    color: '#fff', 
-                    padding: '12px', 
-                    borderRadius: '6px', 
-                    textDecoration: 'none', 
-                    fontWeight: 'bold', 
-                    fontSize: '14px',
-                    letterSpacing: '1px'
-                  }}
-                >
-                  GET DIRECTIONS
-                </a>
-              </div>
+    <div className="bg-background text-on-background font-inter min-h-screen flex flex-col pb-20 md:pb-0">
+      {/* TopNavBar */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+        <div className="flex justify-between items-center px-gutter py-md max-w-container-max mx-auto">
+          <Link href="/" className="font-display-md text-display-md font-black tracking-tighter text-primary-container">
+            WorldCupDNA
+          </Link>
+          <nav className="hidden md:flex items-center space-x-lg">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-headline-md transition-colors ${
+                  link.href === '/venues'
+                    ? 'text-primary-container border-b-2 border-primary-container pb-1 font-bold'
+                    : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                {link.label}
+              </Link>
             ))}
-          </div>
-        )}
-      </section>
+          </nav>
+          <Link
+            href="/auth"
+            className="bg-primary-container text-on-primary-fixed px-md py-sm font-label-caps text-label-caps rounded-lg uppercase tracking-widest font-bold hover:bg-primary-fixed transition-all duration-300 active:scale-95 glow-gold text-center"
+          >
+            Sign In
+          </Link>
+        </div>
+      </header>
 
-      {/* SUGGEST LINK */}
-      <div style={{textAlign: 'center', padding: '40px', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
-        <p style={{color: '#c6c6cc', fontSize: '14px', marginBottom: '16px'}}>Know a great place to watch the matches?</p>
-        <Link href="/venues/suggest" style={{color: '#e6c364', textDecoration: 'none', fontWeight: 'bold', borderBottom: '1px solid #e6c364', paddingBottom: '2px'}}>SUGGEST A VENUE</Link>
-      </div>
-    </main>
+      <main className="pt-[88px] flex flex-col flex-1 min-h-screen">
+        <section className="bg-surface-container px-gutter py-md border-b border-outline-variant/20">
+          <div className="max-w-[1280px] mx-auto space-y-md">
+            <div className="relative w-full group">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-secondary-fixed transition-colors">
+                search
+              </span>
+              <input
+                className="input-ds w-full pl-12 pr-4 py-3 font-inter text-base"
+                placeholder="Search by city, neighborhood, or venue name"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-sm">
+              {FILTER_CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(chip)}
+                  className={`filter-chip ${activeChip === chip ? 'filter-chip-active' : ''}`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+          <aside className="w-full md:w-[42%] overflow-y-auto p-gutter border-r border-outline-variant/20 max-h-[60vh] md:max-h-none">
+            <h2 className="font-display-md text-headline-md font-black uppercase tracking-wider text-primary-container mb-md flex items-center gap-2">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                stadium
+              </span>
+              Watch Parties
+            </h2>
+
+            {loading && <div className="glass-card p-lg text-center text-on-surface-variant font-body-md">Loading venues…</div>}
+            {error && <div className="glass-card p-lg text-center text-red-400 font-body-md">{error}</div>}
+            {!loading && !error && filtered.length === 0 && (
+              <div className="glass-card p-lg text-center text-on-surface-variant font-body-md">No venues match your search.</div>
+            )}
+
+            <div className="space-y-md">
+              {filtered.map((venue) => (
+                <div
+                  key={venue.id}
+                  onClick={() => setActiveVenue(venue.id)}
+                  className={`glass-card p-md cursor-pointer transition-all hover:bg-white/[0.04] border ${
+                    activeVenue === venue.id ? 'border-primary-container shadow-[0_0_15px_rgba(233,196,0,0.25)]' : 'border-outline-variant/30'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-xs gap-sm">
+                    <h3 className="font-display-md text-sm font-black text-on-surface">{venue.name}</h3>
+                    {venue.verified ? (
+                      <span className="flex items-center gap-1 bg-primary-container/15 text-primary-container px-2.5 py-1 rounded-full text-[10px] font-label-caps border border-primary-container/30 shrink-0 font-bold">
+                        <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          verified
+                        </span>
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="font-label-caps text-[10px] text-on-surface-variant px-2.5 py-1 rounded-full border border-outline-variant/30 shrink-0">
+                        Community
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-label-caps text-[10px] text-on-surface-variant mb-sm uppercase tracking-widest font-bold">
+                    {venue.area || venue.address}
+                  </p>
+                  {venue.description && (
+                    <p className="text-xs text-on-surface-variant line-clamp-2 mb-md leading-relaxed">{venue.description}</p>
+                  )}
+                  <button className="text-primary-container font-montserrat text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:underline">
+                    Get Directions
+                    <span className="material-symbols-outlined text-sm">directions</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          <section className="w-full md:w-[58%] min-h-[300px] md:min-h-[500px] relative overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(circle at 30% 40%, #2a2a2a 0%, #131313 60%, #0e0e0e 100%)',
+              }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage: 'linear-gradient(#e5e2e1 1px, transparent 1px), linear-gradient(90deg, #e5e2e1 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+              }}
+            />
+
+            {filtered.map((venue, i) => {
+              const positions = [
+                { top: '25%', left: '30%' },
+                { top: '50%', left: '55%' },
+                { top: '65%', left: '25%' },
+                { top: '35%', left: '70%' },
+                { top: '75%', left: '60%' },
+              ]
+              const pos = positions[i % positions.length]
+              return (
+                <div
+                  key={venue.id}
+                  className={`absolute group cursor-pointer transition-all duration-300 ${activeVenue === venue.id ? 'scale-125 z-10' : 'hover:scale-110'}`}
+                  style={{ top: pos.top, left: pos.left }}
+                  onClick={() => setActiveVenue(venue.id)}
+                >
+                  <div
+                    className={`p-2 rounded-full ring-2 ring-white/10 ${
+                      venue.verified
+                        ? 'bg-primary-container shadow-[0_0_15px_rgba(233,196,0,0.5)]'
+                        : 'bg-surface-container border border-outline-variant/30'
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-lg ${venue.verified ? 'text-black' : 'text-on-surface'}`}
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {venue.verified ? 'stadium' : 'sports_bar'}
+                    </span>
+                  </div>
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap glass-card px-3 py-1.5 text-[10px] font-label-caps border border-outline-variant/30 shadow-lg">
+                    {venue.name}
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="absolute top-md left-md glass-card px-md py-sm flex items-center gap-2 border border-outline-variant/30 shadow-lg">
+              <span className="w-2.5 h-2.5 bg-secondary-fixed rounded-full pulse-live" />
+              <span className="font-label-caps text-[10px] tracking-widest uppercase font-bold text-on-surface">Live Coverage</span>
+            </div>
+
+            <div className="absolute bottom-md right-md flex flex-col gap-sm">
+              {['add', 'remove', 'my_location'].map((icon) => (
+                <button key={icon} className="w-10 h-10 glass-card flex items-center justify-center hover:bg-[rgba(233,196,0,0.15)] transition-colors border border-outline-variant/30 shadow-lg text-on-surface">
+                  <span className="material-symbols-outlined text-[20px]">{icon}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </section>
+
+        <footer className="bg-surface-container-lowest border-t border-outline-variant/30 py-lg px-gutter">
+          <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-md">
+            <div className="text-center md:text-left">
+              <h4 className="font-display-md text-headline-md font-black uppercase text-primary-container mb-xs">Hosting a Watch Party?</h4>
+              <p className="text-on-surface-variant text-sm font-body-md">Get your venue listed and reach thousands of fans.</p>
+            </div>
+            <button className="btn-primary inline-flex items-center gap-2 px-6 py-3 font-montserrat text-sm uppercase tracking-wider glow-gold active:scale-[0.98] transition-all">
+              Add Your Venue
+              <span className="material-symbols-outlined text-[18px]">add_location_alt</span>
+            </button>
+          </div>
+        </footer>
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 flex items-center justify-around z-50">
+        {[
+          { href: '/', icon: 'home', label: 'Home', active: false },
+          { href: '/matches', icon: 'sports_soccer', label: 'Matches', active: false },
+          { href: '/predictions', icon: 'analytics', label: 'Predict', active: false },
+          { href: '/leaderboard', icon: 'leaderboard', label: 'Ranks', active: false },
+          { href: '/venues', icon: 'location_on', label: 'Venues', active: true },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex flex-col items-center gap-xs transition-colors ${item.active ? 'text-primary-container' : 'text-on-surface-variant hover:text-primary'}`}
+          >
+            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+            <span className="font-label-caps text-[9px] uppercase tracking-widest font-bold">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
   )
 }
